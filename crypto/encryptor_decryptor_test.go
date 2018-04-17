@@ -42,8 +42,6 @@ var _ = Describe("Encryptor", func() {
 		passphrase := "passphrase"
 		decryptor = Decryptor{
 			Passphrase:          passphrase,
-			CipherNonceAccessor: cipherNonceAccessor,
-			CipherSaltAccessor:  cipherSaltAccessor,
 		}
 		encryptor = Encryptor{
 			Passphrase:     passphrase,
@@ -71,7 +69,7 @@ var _ = Describe("Encryptor", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(encryptedData).ToNot(BeNil())
 
-			decryptedData, err := decryptor.Decrypt(encryptedData.CipherValue)
+			decryptedData, err := decryptor.Decrypt(encryptedData)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(decryptedData).To(Equal(plainText))
@@ -79,9 +77,9 @@ var _ = Describe("Encryptor", func() {
 
 		Context("when empty ciphervalue is provided", func() {
 			It("should return a meaningful error", func() {
-				_, err := decryptor.Decrypt(nil)
+				_, err := decryptor.Decrypt(EncryptedValue{})
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("Unable to decrypt due to empty CipherText."))
+				Expect(err).To(MatchError("unable to decrypt due to empty CipherText"))
 			})
 
 		})

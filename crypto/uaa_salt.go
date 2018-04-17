@@ -5,10 +5,15 @@ import (
 	"errors"
 )
 
-type UaaSaltGenerator struct {}
+//go:generate counterfeiter . CipherSaltAccessor
+type CipherSaltAccessor interface {
+	GetSalt([]byte) ([]byte, error)
+}
+
+type UaaSaltGenerator struct{}
 
 func (UaaSaltGenerator) GetSalt() []byte {
-	var salt  = make([]byte, 32)
+	var salt = make([]byte, 32)
 	_, err := rand.Read(salt)
 	if err != nil {
 		//TODO: return an error
@@ -17,7 +22,7 @@ func (UaaSaltGenerator) GetSalt() []byte {
 	return salt
 }
 
-type UaaSaltAccessor struct {}
+type UaaSaltAccessor struct{}
 
 func (UaaSaltAccessor) GetSalt(cipher []byte) ([]byte, error) {
 	if len(cipher) < 45 {
@@ -25,4 +30,3 @@ func (UaaSaltAccessor) GetSalt(cipher []byte) ([]byte, error) {
 	}
 	return cipher[12:44], nil
 }
-

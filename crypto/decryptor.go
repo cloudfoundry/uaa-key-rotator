@@ -6,29 +6,16 @@ import (
 	"errors"
 )
 
-//go:generate counterfeiter . CipherSaltAccessor
-type CipherSaltAccessor interface {
-	GetSalt([]byte) ([]byte, error)
-}
-
-//go:generate counterfeiter . CipherNonceAccessor
-type CipherNonceAccessor interface {
-	GetNonce([]byte) ([]byte, error)
-}
-
 type Decryptor struct {
 	Passphrase          string
-	CipherSaltAccessor  CipherSaltAccessor
-	CipherNonceAccessor CipherNonceAccessor
 }
 
-func (d Decryptor) Decrypt(cipherValue []byte) (string, error) {
-	if len(cipherValue) == 0 {
-		return "", errors.New("Unable to decrypt due to empty CipherText.")
+func (d Decryptor) Decrypt(encryptedValue EncryptedValue) (string, error) {
+	if len(encryptedValue.CipherValue) == 0 {
+		return "", errors.New("unable to decrypt due to empty CipherText")
 	}
-	salt, err := d.CipherSaltAccessor.GetSalt(cipherValue)
 
-	aes, err := aes.NewCipher(GenerateKey(salt, d.Passphrase))
+	aes, err := aes.NewCipher(GenerateKey(encryptedValue.Salt, d.Passphrase))
 	if err != nil {
 		return "", err
 	}
@@ -38,11 +25,7 @@ func (d Decryptor) Decrypt(cipherValue []byte) (string, error) {
 		return "", err
 	}
 
-	nonce, err := d.CipherNonceAccessor.GetNonce(cipherValue)
-	if err != nil {
-		return "", err
-	}
-	plainText, err := aesGcm.Open(nil, nonce, cipherValue, nil)
+	plainText, err := aesGcm.Open(nil, encryptedValue.Nonce, encryptedValue.CipherValue, nil)
 	if err != nil {
 		return "", err
 	}

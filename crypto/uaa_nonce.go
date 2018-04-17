@@ -5,6 +5,11 @@ import (
 	"errors"
 )
 
+//go:generate counterfeiter . CipherNonceAccessor
+type CipherNonceAccessor interface {
+	GetNonce([]byte) ([]byte, error)
+}
+
 type UaaNonceGenerator struct{}
 
 func (UaaNonceGenerator) GetNonce() []byte {
