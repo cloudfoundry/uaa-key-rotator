@@ -48,6 +48,12 @@
   version = "v1.3.0"
 
 [[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
@@ -88,6 +94,12 @@
   version = "v0.3.0"
 
 [[projects]]
+  branch = "v2"
+  name = "gopkg.in/validator.v2"
+  packages = ["."]
+  revision = "59c90c7046f643cbe0d4e7c8776c42a84ce75910"
+
+[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
@@ -96,6 +108,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1b0f2890c020e9a78afc0732a6ce22887293f04fbb3f7a16b82013c913f63e09"
+  inputs-digest = "affe80acb63d597d237063e54ff5c7bb669ac5fb7b56da231bee3068ad9236c4"
   solver-name = "gps-cdcl"
   solver-version = 1
