@@ -6,6 +6,7 @@
   packages = [
     ".",
     "config",
+    "extensions/table",
     "internal/codelocation",
     "internal/containernode",
     "internal/failer",
@@ -52,6 +53,12 @@
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["pbkdf2"]
+  revision = "d6449816ce06963d9d136eee5a56fca5b0616e7e"
 
 [[projects]]
   branch = "master"
@@ -108,6 +115,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "affe80acb63d597d237063e54ff5c7bb669ac5fb7b56da231bee3068ad9236c4"
+  inputs-digest = "6feaf9f3f6c112390d589c7aa948f5b6a99d5365cf4700f3defc94bc4427f018"
   solver-name = "gps-cdcl"
   solver-version = 1
