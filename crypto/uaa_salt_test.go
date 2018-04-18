@@ -17,13 +17,17 @@ var _ = Describe("UaaSalt", func() {
 		})
 
 		It("should generate a salt 32 bytes long", func() {
-			salt := saltGenerator.GetSalt()
+			salt, err := saltGenerator.GetSalt()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(salt).To(HaveLen(32))
 		})
 
 		It("should generate different salts every time", func() {
-			salt1 := saltGenerator.GetSalt()
-			salt2 := saltGenerator.GetSalt()
+			salt1, err := saltGenerator.GetSalt()
+			Expect(err).NotTo(HaveOccurred())
+
+			salt2, err := saltGenerator.GetSalt()
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(salt1).ToNot(Equal(salt2))
 		})

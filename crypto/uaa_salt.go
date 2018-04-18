@@ -12,14 +12,10 @@ type CipherSaltAccessor interface {
 
 type UaaSaltGenerator struct{}
 
-func (UaaSaltGenerator) GetSalt() []byte {
+func (UaaSaltGenerator) GetSalt() ([]byte, error) {
 	var salt = make([]byte, 32)
 	_, err := rand.Read(salt)
-	if err != nil {
-		//TODO: return an error
-		panic(err)
-	}
-	return salt
+	return salt, err
 }
 
 type UaaSaltAccessor struct{}

@@ -12,14 +12,10 @@ type CipherNonceAccessor interface {
 
 type UaaNonceGenerator struct{}
 
-func (UaaNonceGenerator) GetNonce() []byte {
+func (UaaNonceGenerator) GetNonce() ([]byte, error) {
 	var nonce = make([]byte, 12)
 	_, err := rand.Read(nonce)
-	if err != nil {
-		//TODO: return an error
-		panic(err)
-	}
-	return nonce
+	return nonce, err
 }
 
 type UaaNonceAccessor struct{}

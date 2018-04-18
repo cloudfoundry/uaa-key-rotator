@@ -17,7 +17,8 @@ var _ = Describe("UaaNonce", func() {
 		})
 
 		It("should generate a nonce 12 bytes long", func() {
-			nonce := nonceGenerator.GetNonce()
+			nonce, err := nonceGenerator.GetNonce()
+			Expect(err).ToNot(HaveOccurred())
 			Expect(nonce).To(HaveLen(12))
 
 		})

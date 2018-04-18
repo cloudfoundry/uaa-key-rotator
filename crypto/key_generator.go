@@ -7,8 +7,6 @@ import (
 
 
 const (
-	SaltSize            = 32
-	NonceSize           = 12
 	AES256KeyLength     = 32
 	ShaNumberIterations = 65536
 )

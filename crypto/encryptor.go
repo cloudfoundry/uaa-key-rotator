@@ -44,4 +44,3 @@ func (e Encryptor) Encrypt(plainText string) (EncryptedValue, error) {
 	cipherValue := aesGcm.Seal(nil, nonce, []byte(plainText), nil)
 	return EncryptedValue{salt, nonce, cipherValue}, nil
 }
-
