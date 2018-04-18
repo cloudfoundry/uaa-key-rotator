@@ -2,6 +2,24 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/jmoiron/sqlx"
+  packages = [
+    ".",
+    "reflectx"
+  ]
+  revision = "2aeb6a910c2b94f2d5eb53d9895d80e27264ec41"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid"
+  ]
+  revision = "d34b9ff171c21ad295489235aec8b6626023cd04"
+
+[[projects]]
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
@@ -115,6 +133,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6feaf9f3f6c112390d589c7aa948f5b6a99d5365cf4700f3defc94bc4427f018"
+  inputs-digest = "8fa4b88c7daa46d839ba59a9d78b1adeea242fc9ef4ce1809637718ccc12ce77"
   solver-name = "gps-cdcl"
   solver-version = 1
