@@ -11,6 +11,12 @@ import (
 type RotatorConfig struct {
 	ActiveKeyLabel      string `json:"activeKeyLabel" validate:"nonzero"`
 	ActiveKeyPassphrase string `json:"activeKeyPassphrase" validate:"nonzero"`
+	DatabaseHostname    string `json:"databaseHostname" validate:"nonzero"`
+	DatabasePort        string `json:"databasePort" validate:"nonzero"`
+	DatabaseScheme      string `json:"databaseScheme" validate:"nonzero"`
+	DatabaseName        string `json:"databaseName" validate:"nonzero"`
+	DatabaseUsername    string `json:"databaseUsername" validate:"nonzero"`
+	DatabasePassword    string `json:"databasePassword" validate:"nonzero"`
 }
 
 func New(rotatorConfigReader io.Reader) (*RotatorConfig, error) {
