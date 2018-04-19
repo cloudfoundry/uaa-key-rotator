@@ -1,14 +1,13 @@
 package db
 
 import (
-	"database/sql/driver"
 	"strings"
 	"bytes"
 	"github.com/pkg/errors"
 	"github.com/jmoiron/sqlx"
 )
 
-type MfaCredentials struct {
+type MfaCredential struct {
 	UserId                  string `db:"user_id"`
 	MfaProviderId           Char   `db:"mfa_provider_id"`
 	ValidationCode          int    `db:"validation_code"`
@@ -23,28 +22,28 @@ type Queryer interface {
 	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
 }
 
-func ReadAll(db Queryer) ([]MfaCredentials, error) {
+func ReadAll(db Queryer) ([]MfaCredential, error) {
 	rows, err := db.Queryx(`select user_id, mfa_provider_id, zone_id, validation_code, scratch_codes, encryption_key_label, encrypted_validation_code from user_google_mfa_credentials`)
 	if err != nil {
 		return nil, errors.Wrap(err, "ReadAll failed to query table")
 	}
-	defer rows.Close()
+	defer rows.Close() // untested
 
-	rows.Next()
+	var mfaCredentials []MfaCredential
 
-	credentials := MfaCredentials{}
-	err = rows.StructScan(&credentials)
-	if err != nil {
-		panic(err)
+	for rows.Next() {
+		mfaCredential := MfaCredential{}
+		err = rows.StructScan(&mfaCredential)
+		if err != nil {
+			return nil, errors.Wrap(err, "Unable to deserialize db response") //untested
+		}
+		mfaCredentials = append(mfaCredentials, mfaCredential)
 	}
-	return []MfaCredentials{credentials}, nil
+
+	return mfaCredentials, nil
 }
 
 type Char string
-
-func (g Char) Value() (driver.Value, error) {
-	return string(g), nil
-}
 
 func (g *Char) Scan(src interface{}) error {
 	switch src.(type) {

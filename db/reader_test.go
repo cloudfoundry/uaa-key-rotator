@@ -17,39 +17,38 @@ var _ = Describe("Postgresql", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(numOfRowsDeleted).To(BeNumerically(">=", int64(0)))
 
-		insertResult, err := db.Exec(`insert into user_google_mfa_credentials(
-		user_id, 
-		secret_key, 
-		validation_code, 
-		scratch_codes, 
-		mfa_provider_id, 
-		zone_id, 
-		encryption_key_label, 
-		encrypted_validation_code) values(
-		'1', 'secret-key', 1234, 'scratch_codes', 'mfa_provider_id', 'zone_id', 'activeKeyLabel', 'encrypted_validation_code'
-		)`)
-		Expect(err).NotTo(HaveOccurred())
-		numOfRowsInserted, err := insertResult.RowsAffected()
-		Expect(err).NotTo(HaveOccurred())
-		Expect(numOfRowsInserted).To(Equal(int64(1)))
+		insertGoogleMfaCredential("1")
+		insertGoogleMfaCredential("2")
 	})
 
 	It("should return every record from the user_google_mfa_credentials table", func() {
-		var mfaCredentials []MfaCredentials
+		var mfaCredentials []MfaCredential
 		var err error
 
 		mfaCredentials, err = ReadAll(db)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(mfaCredentials).To(ContainElement(MfaCredentials{
-			UserId:                  "1",
-			MfaProviderId:           Char("mfa_provider_id"),
-			ZoneId:                  Char("zone_id"),
-			ValidationCode:          1234,
-			ScratchCodes:            "scratch_codes",
-			EncryptionKeyLabel:      "activeKeyLabel",
-			EncryptedValidationCode: "encrypted_validation_code",
-		}))
+		Expect(mfaCredentials).To(HaveLen(2))
+		Expect(mfaCredentials).To(ConsistOf(
+			MfaCredential{
+				UserId:                  "1",
+				MfaProviderId:           Char("mfa_provider_id"),
+				ZoneId:                  Char("zone_id"),
+				ValidationCode:          1234,
+				ScratchCodes:            "scratch_codes",
+				EncryptionKeyLabel:      "activeKeyLabel",
+				EncryptedValidationCode: "encrypted_validation_code",
+			},
+			MfaCredential{
+				UserId:                  "2",
+				MfaProviderId:           Char("mfa_provider_id"),
+				ZoneId:                  Char("zone_id"),
+				ValidationCode:          1234,
+				ScratchCodes:            "scratch_codes",
+				EncryptionKeyLabel:      "activeKeyLabel",
+				EncryptedValidationCode: "encrypted_validation_code",
+			},
+		))
 	})
 
 	Describe("FakeDB", func() {

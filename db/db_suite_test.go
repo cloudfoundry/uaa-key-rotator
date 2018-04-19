@@ -14,6 +14,7 @@ import (
 	"time"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"strings"
 )
 
 func TestDb(t *testing.T) {
@@ -24,8 +25,6 @@ func TestDb(t *testing.T) {
 var _ = BeforeSuite(func() {
 	By("validating and testing the db connection", testDBConnection)
 	By("migrating UAA database", migrateUaaDatabase)
-	// create config file to point to db (env variables)
-	// insert data
 })
 
 var db *sqlx.DB
@@ -64,4 +63,40 @@ func testDBConnection() {
 	db, err = sqlx.Open("postgres", connStr)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).Should(BeNil())
+}
+
+func insertGoogleMfaCredential(userId string) {
+	insertSQL := RebindForSQLDialect(`insert into user_google_mfa_credentials(
+		user_id, 
+		secret_key, 
+		validation_code, 
+		scratch_codes, 
+		mfa_provider_id, 
+		zone_id, 
+		encryption_key_label, 
+		encrypted_validation_code) values(
+		?, 'secret-key', 1234, 'scratch_codes', 'mfa_provider_id', 'zone_id', 'activeKeyLabel', 'encrypted_validation_code'
+		)`, "postgres")
+
+	insertResult, err := db.Exec(insertSQL, userId)
+
+	Expect(err).NotTo(HaveOccurred())
+	numOfRowsInserted, err := insertResult.RowsAffected()
+	Expect(err).NotTo(HaveOccurred())
+	Expect(numOfRowsInserted).To(Equal(int64(1)))
+}
+
+func RebindForSQLDialect(query, dialect string) string {
+	if dialect == "mysql" {
+		return query
+	}
+	if dialect != "postgres" {
+		panic(fmt.Sprintf("Unrecognized DB dialect '%s'", dialect))
+	}
+
+	strParts := strings.Split(query, "?")
+	for i := 1; i < len(strParts); i++ {
+		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
+	}
+	return strings.Join(strParts, "")
 }
