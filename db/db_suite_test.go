@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"strings"
+	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
+	"database/sql"
 )
 
 func TestDb(t *testing.T) {
@@ -65,7 +67,18 @@ func testDBConnection() {
 	Expect(db.Ping()).Should(BeNil())
 }
 
-func insertGoogleMfaCredential(userId string) {
+func insertGoogleMfaCredential(userId string) db2.MfaCredential {
+	mfaCredential := db2.MfaCredential{
+		UserId: userId,
+		SecretKey: "secret-key",
+		ScratchCodes: "scratch_codes",
+		MfaProviderId: "mfa_provider_id",
+		ZoneId: "zone_id",
+		EncryptionKeyLabel: "activeKeyLabel",
+		EncryptedValidationCode: "encrypted_validation_code",
+		ValidationCode: sql.NullInt64{Int64: 1234, Valid: true},
+	}
+
 	insertSQL := RebindForSQLDialect(`insert into user_google_mfa_credentials(
 		user_id, 
 		secret_key, 
@@ -75,15 +88,24 @@ func insertGoogleMfaCredential(userId string) {
 		zone_id, 
 		encryption_key_label, 
 		encrypted_validation_code) values(
-		?, 'secret-key', 1234, 'scratch_codes', 'mfa_provider_id', 'zone_id', 'activeKeyLabel', 'encrypted_validation_code'
-		)`, "postgres")
+		?, ?, ?, ?, ?, ?, ?, ?
+		)`,
+		"postgres")
 
-	insertResult, err := db.Exec(insertSQL, userId)
+	insertResult, err := db.Exec(insertSQL, mfaCredential.UserId,
+		mfaCredential.SecretKey,
+		mfaCredential.ValidationCode,
+		mfaCredential.ScratchCodes,
+		mfaCredential.MfaProviderId,
+		mfaCredential.ZoneId,
+		mfaCredential.EncryptionKeyLabel,
+		mfaCredential.EncryptedValidationCode)
 
 	Expect(err).NotTo(HaveOccurred())
 	numOfRowsInserted, err := insertResult.RowsAffected()
 	Expect(err).NotTo(HaveOccurred())
 	Expect(numOfRowsInserted).To(Equal(int64(1)))
+	return mfaCredential
 }
 
 func RebindForSQLDialect(query, dialect string) string {
