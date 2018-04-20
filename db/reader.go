@@ -5,16 +5,18 @@ import (
 	"bytes"
 	"github.com/pkg/errors"
 	"github.com/jmoiron/sqlx"
+	"database/sql"
 )
 
 type MfaCredential struct {
-	UserId                  string `db:"user_id"`
-	MfaProviderId           Char   `db:"mfa_provider_id"`
-	ValidationCode          int    `db:"validation_code"`
-	ScratchCodes            string `db:"scratch_codes"`
-	EncryptionKeyLabel      string `db:"encryption_key_label"`
-	EncryptedValidationCode string `db:"encrypted_validation_code"`
-	ZoneId                  Char   `db:"zone_id"`
+	UserId                  string        `db:"user_id"`
+	MfaProviderId           Char          `db:"mfa_provider_id"`
+	ValidationCode          sql.NullInt64 `db:"validation_code"`
+	ScratchCodes            string        `db:"scratch_codes"`
+	SecretKey               string        `db:"secret_key"`
+	EncryptionKeyLabel      string        `db:"encryption_key_label"`
+	EncryptedValidationCode string        `db:"encrypted_validation_code"`
+	ZoneId                  Char          `db:"zone_id"`
 }
 
 //go:generate counterfeiter . Queryer
@@ -23,7 +25,7 @@ type Queryer interface {
 }
 
 func ReadAll(db Queryer) ([]MfaCredential, error) {
-	rows, err := db.Queryx(`select user_id, mfa_provider_id, zone_id, validation_code, scratch_codes, encryption_key_label, encrypted_validation_code from user_google_mfa_credentials`)
+	rows, err := db.Queryx(`select user_id, mfa_provider_id, zone_id, validation_code, scratch_codes, encryption_key_label, encrypted_validation_code, secret_key from user_google_mfa_credentials`)
 	if err != nil {
 		return nil, errors.Wrap(err, "ReadAll failed to query table")
 	}
