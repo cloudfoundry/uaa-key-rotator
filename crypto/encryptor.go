@@ -5,18 +5,17 @@ import (
 	"crypto/cipher"
 )
 
-
 //go:generate counterfeiter . SaltGenerator
 type SaltGenerator interface {
-	GetSalt() []byte
+	GetSalt() ([]byte, error)
 }
 
 //go:generate counterfeiter . NonceGenerator
 type NonceGenerator interface {
-	GetNonce() []byte
+	GetNonce() ([]byte, error)
 }
 
-type Encryptor struct {
+type UAAEncryptor struct {
 	Passphrase     string
 	SaltGenerator  SaltGenerator
 	NonceGenerator NonceGenerator
@@ -28,9 +27,23 @@ type EncryptedValue struct {
 	CipherValue []byte
 }
 
-func (e Encryptor) Encrypt(plainText string) (EncryptedValue, error) {
-	salt := e.SaltGenerator.GetSalt()
-	nonce := e.NonceGenerator.GetNonce()
+//go:generate counterfeiter . Encryptor
+type Encryptor interface {
+	Encrypt(plainText string) (EncryptedValue, error)
+}
+
+func (e UAAEncryptor) Encrypt(plainText string) (EncryptedValue, error) {
+	salt, err := e.SaltGenerator.GetSalt()
+	if err != nil {
+		//TODO: handle error
+		panic(err)
+	}
+	nonce, err := e.NonceGenerator.GetNonce()
+	if err != nil {
+		//TODO: handle error
+		panic(err)
+	}
+
 	aes, err := aes.NewCipher(GenerateKey(salt, e.Passphrase))
 	if err != nil {
 		return EncryptedValue{}, err

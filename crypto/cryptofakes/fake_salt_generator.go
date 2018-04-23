@@ -8,20 +8,22 @@ import (
 )
 
 type FakeSaltGenerator struct {
-	GetSaltStub        func() []byte
+	GetSaltStub        func() ([]byte, error)
 	getSaltMutex       sync.RWMutex
 	getSaltArgsForCall []struct{}
 	getSaltReturns     struct {
 		result1 []byte
+		result2 error
 	}
 	getSaltReturnsOnCall map[int]struct {
 		result1 []byte
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeSaltGenerator) GetSalt() []byte {
+func (fake *FakeSaltGenerator) GetSalt() ([]byte, error) {
 	fake.getSaltMutex.Lock()
 	ret, specificReturn := fake.getSaltReturnsOnCall[len(fake.getSaltArgsForCall)]
 	fake.getSaltArgsForCall = append(fake.getSaltArgsForCall, struct{}{})
@@ -31,9 +33,9 @@ func (fake *FakeSaltGenerator) GetSalt() []byte {
 		return fake.GetSaltStub()
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.getSaltReturns.result1
+	return fake.getSaltReturns.result1, fake.getSaltReturns.result2
 }
 
 func (fake *FakeSaltGenerator) GetSaltCallCount() int {
@@ -42,23 +44,26 @@ func (fake *FakeSaltGenerator) GetSaltCallCount() int {
 	return len(fake.getSaltArgsForCall)
 }
 
-func (fake *FakeSaltGenerator) GetSaltReturns(result1 []byte) {
+func (fake *FakeSaltGenerator) GetSaltReturns(result1 []byte, result2 error) {
 	fake.GetSaltStub = nil
 	fake.getSaltReturns = struct {
 		result1 []byte
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeSaltGenerator) GetSaltReturnsOnCall(i int, result1 []byte) {
+func (fake *FakeSaltGenerator) GetSaltReturnsOnCall(i int, result1 []byte, result2 error) {
 	fake.GetSaltStub = nil
 	if fake.getSaltReturnsOnCall == nil {
 		fake.getSaltReturnsOnCall = make(map[int]struct {
 			result1 []byte
+			result2 error
 		})
 	}
 	fake.getSaltReturnsOnCall[i] = struct {
 		result1 []byte
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeSaltGenerator) Invocations() map[string][][]interface{} {

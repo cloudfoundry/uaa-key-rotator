@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry/uaa-key-rotator/db/dbfakes"
 	"errors"
 	"database/sql"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
 )
 
 var _ = Describe("Postgresql", func() {
@@ -23,7 +24,7 @@ var _ = Describe("Postgresql", func() {
 	})
 
 	It("should return every record from the user_google_mfa_credentials table", func() {
-		var mfaCredentials []MfaCredential
+		var mfaCredentials []entity.MfaCredential
 		var err error
 
 		mfaCredentials, err = ReadAll(db)
@@ -31,20 +32,20 @@ var _ = Describe("Postgresql", func() {
 
 		Expect(mfaCredentials).To(HaveLen(2))
 		Expect(mfaCredentials).To(ConsistOf(
-			MfaCredential{
+			entity.MfaCredential{
 				UserId:                  "1",
-				MfaProviderId:           Char("mfa_provider_id"),
-				ZoneId:                  Char("zone_id"),
+				MfaProviderId:           entity.Char("mfa_provider_id"),
+				ZoneId:                  entity.Char("zone_id"),
 				ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
 				ScratchCodes:            "scratch_codes",
 				SecretKey:            	 "secret-key",
 				EncryptionKeyLabel:      "activeKeyLabel",
 				EncryptedValidationCode: "encrypted_validation_code",
 			},
-			MfaCredential{
+			entity.MfaCredential{
 				UserId:                  "2",
-				MfaProviderId:           Char("mfa_provider_id"),
-				ZoneId:                  Char("zone_id"),
+				MfaProviderId:           entity.Char("mfa_provider_id"),
+				ZoneId:                  entity.Char("zone_id"),
 				ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
 				SecretKey:            	 "secret-key",
 				ScratchCodes:            "scratch_codes",

@@ -8,9 +8,9 @@ import (
 	"github.com/cloudfoundry/uaa-key-rotator/crypto/cryptofakes"
 )
 
-var _ = Describe("Encryptor", func() {
-	var encryptor Encryptor
-	var decryptor Decryptor
+var _ = Describe("UAAEncryptor", func() {
+	var encryptor UAAEncryptor
+	var decryptor UAADecryptor
 
 	var salt []byte
 	var nonce []byte
@@ -31,8 +31,8 @@ var _ = Describe("Encryptor", func() {
 		cipherSaltAccessor = &cryptofakes.FakeCipherSaltAccessor{}
 		cipherNonceAccessor = &cryptofakes.FakeCipherNonceAccessor{}
 
-		saltGenerator.GetSaltReturns(salt)
-		nonceGenerator.GetNonceReturns(nonce)
+		saltGenerator.GetSaltReturns(salt, nil)
+		nonceGenerator.GetNonceReturns(nonce, nil)
 
 		cipherSaltAccessor.GetSaltReturns(salt, nil)
 		cipherNonceAccessor.GetNonceReturns(nonce, nil)
@@ -40,10 +40,10 @@ var _ = Describe("Encryptor", func() {
 
 	JustBeforeEach(func() {
 		passphrase := "passphrase"
-		decryptor = Decryptor{
+		decryptor = UAADecryptor{
 			Passphrase:          passphrase,
 		}
-		encryptor = Encryptor{
+		encryptor = UAAEncryptor{
 			Passphrase:     passphrase,
 			SaltGenerator:  saltGenerator,
 			NonceGenerator: nonceGenerator,

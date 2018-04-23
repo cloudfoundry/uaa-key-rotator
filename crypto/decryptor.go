@@ -6,11 +6,16 @@ import (
 	"errors"
 )
 
-type Decryptor struct {
+//go:generate counterfeiter . Decryptor
+type Decryptor interface {
+	Decrypt(encryptedValue EncryptedValue) (string, error)
+}
+
+type UAADecryptor struct {
 	Passphrase          string
 }
 
-func (d Decryptor) Decrypt(encryptedValue EncryptedValue) (string, error) {
+func (d UAADecryptor) Decrypt(encryptedValue EncryptedValue) (string, error) {
 	if len(encryptedValue.CipherValue) == 0 {
 		return "", errors.New("unable to decrypt due to empty CipherText")
 	}

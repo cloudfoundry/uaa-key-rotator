@@ -8,12 +8,13 @@ import (
 	"strconv"
 	"github.com/cloudfoundry/uaa-key-rotator/db/dbfakes"
 	"errors"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
 )
 
 var _ = Describe("Writer", func() {
 
 	var (
-		defaultMfaCredential db2.MfaCredential
+		defaultMfaCredential entity.MfaCredential
 	)
 
 	BeforeEach(func() {
@@ -30,7 +31,7 @@ var _ = Describe("Writer", func() {
 	It("should update a single mfa record", func() {
 		var err error
 
-		updatedMfaCredential := db2.MfaCredential{
+		updatedMfaCredential := entity.MfaCredential{
 			UserId:                  defaultMfaCredential.UserId,
 			MfaProviderId:           defaultMfaCredential.MfaProviderId,
 			ZoneId:                  defaultMfaCredential.ZoneId,
@@ -57,7 +58,7 @@ var _ = Describe("Writer", func() {
 			mockDb.QueryReturns(nil, errors.New("some db error"))
 		})
 		It("should return meaningful error", func() {
-			err := db2.Write(mockDb, db2.MfaCredential{})
+			err := db2.Write(mockDb, entity.MfaCredential{})
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError("Unable to update mfa db record: some db error"))
 		})

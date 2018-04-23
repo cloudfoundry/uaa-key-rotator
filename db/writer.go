@@ -5,6 +5,7 @@ import (
 	"strings"
 	"database/sql"
 	"github.com/pkg/errors"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
 )
 
 var updateGoogleMfaCredentialQuery = `update
@@ -20,7 +21,7 @@ type Updater interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 }
 
-func Write(db Updater, credential MfaCredential) error {
+func Write(db Updater, credential entity.MfaCredential) error {
 	rs, err := db.Query(rebindForSQLDialect(updateGoogleMfaCredentialQuery, "postgres"),
 		credential.SecretKey,
 		credential.ScratchCodes,

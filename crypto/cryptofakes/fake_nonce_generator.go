@@ -8,20 +8,22 @@ import (
 )
 
 type FakeNonceGenerator struct {
-	GetNonceStub        func() []byte
+	GetNonceStub        func() ([]byte, error)
 	getNonceMutex       sync.RWMutex
 	getNonceArgsForCall []struct{}
 	getNonceReturns     struct {
 		result1 []byte
+		result2 error
 	}
 	getNonceReturnsOnCall map[int]struct {
 		result1 []byte
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeNonceGenerator) GetNonce() []byte {
+func (fake *FakeNonceGenerator) GetNonce() ([]byte, error) {
 	fake.getNonceMutex.Lock()
 	ret, specificReturn := fake.getNonceReturnsOnCall[len(fake.getNonceArgsForCall)]
 	fake.getNonceArgsForCall = append(fake.getNonceArgsForCall, struct{}{})
@@ -31,9 +33,9 @@ func (fake *FakeNonceGenerator) GetNonce() []byte {
 		return fake.GetNonceStub()
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.getNonceReturns.result1
+	return fake.getNonceReturns.result1, fake.getNonceReturns.result2
 }
 
 func (fake *FakeNonceGenerator) GetNonceCallCount() int {
@@ -42,23 +44,26 @@ func (fake *FakeNonceGenerator) GetNonceCallCount() int {
 	return len(fake.getNonceArgsForCall)
 }
 
-func (fake *FakeNonceGenerator) GetNonceReturns(result1 []byte) {
+func (fake *FakeNonceGenerator) GetNonceReturns(result1 []byte, result2 error) {
 	fake.GetNonceStub = nil
 	fake.getNonceReturns = struct {
 		result1 []byte
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeNonceGenerator) GetNonceReturnsOnCall(i int, result1 []byte) {
+func (fake *FakeNonceGenerator) GetNonceReturnsOnCall(i int, result1 []byte, result2 error) {
 	fake.GetNonceStub = nil
 	if fake.getNonceReturnsOnCall == nil {
 		fake.getNonceReturnsOnCall = make(map[int]struct {
 			result1 []byte
+			result2 error
 		})
 	}
 	fake.getNonceReturnsOnCall[i] = struct {
 		result1 []byte
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeNonceGenerator) Invocations() map[string][][]interface{} {

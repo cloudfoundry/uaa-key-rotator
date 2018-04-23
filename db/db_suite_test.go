@@ -15,8 +15,8 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"strings"
-	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 	"database/sql"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
 )
 
 func TestDb(t *testing.T) {
@@ -67,8 +67,8 @@ func testDBConnection() {
 	Expect(db.Ping()).Should(BeNil())
 }
 
-func insertGoogleMfaCredential(userId string) db2.MfaCredential {
-	mfaCredential := db2.MfaCredential{
+func insertGoogleMfaCredential(userId string) entity.MfaCredential {
+	mfaCredential := entity.MfaCredential{
 		UserId: userId,
 		SecretKey: "secret-key",
 		ScratchCodes: "scratch_codes",
