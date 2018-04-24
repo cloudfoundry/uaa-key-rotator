@@ -15,7 +15,8 @@ import (
 	"database/sql"
 )
 
-var _ = Describe("Rotator", func() {
+var _ = Describe("UAARotator", func() {
+	var uaaRotator rotator.UAARotator
 	var updatedCredential entity.MfaCredential
 	var rotatorError error
 
@@ -107,7 +108,13 @@ var _ = Describe("Rotator", func() {
 	})
 
 	JustBeforeEach(func() {
-		updatedCredential, rotatorError = rotator.Rotate(
+		uaaRotator = rotator.UAARotator{
+			KeyService:    fakeKeyService,
+			SaltAccessor:  fakeSaltAccessor,
+			NonceAccessor: fakeNonceAccessor,
+			DbMapper:      fakeDbMapper,
+		}
+		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
 				UserId:                  "some-user-id",
 				MfaProviderId:           "some-provider-id",
@@ -118,10 +125,6 @@ var _ = Describe("Rotator", func() {
 				SecretKey:               secretKey,
 				EncryptedValidationCode: encryptedValidationCode,
 			},
-			fakeKeyService,
-			fakeSaltAccessor,
-			fakeNonceAccessor,
-			fakeDbMapper,
 		)
 
 		Expect(updatedCredential.ValidationCode).To(Equal(sql.NullInt64{Int64: 1}))
@@ -175,17 +178,20 @@ var _ = Describe("Rotator", func() {
 		var errorStr = "some error" + time.Now().String()
 		fakeSaltAccessor.GetSaltReturnsOnCall(errorIndex, nil, errors.New(errorStr))
 
-		updatedCredential, rotatorError = rotator.Rotate(
+		uaaRotator = rotator.UAARotator{
+			KeyService:    fakeKeyService,
+			SaltAccessor:  fakeSaltAccessor,
+			NonceAccessor: fakeNonceAccessor,
+			DbMapper:      fakeDbMapper,
+		}
+
+		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
 				EncryptionKeyLabel:      "key-1",
 				ScratchCodes:            scratchCodes,
 				SecretKey:               secretKey,
 				EncryptedValidationCode: encryptedValidationCode,
 			},
-			fakeKeyService,
-			fakeSaltAccessor,
-			fakeNonceAccessor,
-			fakeDbMapper,
 		)
 
 		Expect(rotatorError).To(HaveOccurred())
@@ -201,17 +207,20 @@ var _ = Describe("Rotator", func() {
 		var errorStr = "some error" + time.Now().String()
 		fakeNonceAccessor.GetNonceReturnsOnCall(errorIndex, nil, errors.New(errorStr))
 
-		updatedCredential, rotatorError = rotator.Rotate(
+		uaaRotator = rotator.UAARotator{
+			KeyService:    fakeKeyService,
+			SaltAccessor:  fakeSaltAccessor,
+			NonceAccessor: fakeNonceAccessor,
+			DbMapper:      fakeDbMapper,
+		}
+
+		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
 				EncryptionKeyLabel:      "key-1",
 				ScratchCodes:            scratchCodes,
 				SecretKey:               secretKey,
 				EncryptedValidationCode: encryptedValidationCode,
 			},
-			fakeKeyService,
-			fakeSaltAccessor,
-			fakeNonceAccessor,
-			fakeDbMapper,
 		)
 
 		Expect(rotatorError).To(HaveOccurred())
@@ -228,17 +237,20 @@ var _ = Describe("Rotator", func() {
 		var errorStr = "some error" + time.Now().String()
 		fakeDecryptor.DecryptReturnsOnCall(errorIndex, "", errors.New(errorStr))
 
-		updatedCredential, rotatorError = rotator.Rotate(
+		uaaRotator = rotator.UAARotator{
+			KeyService:    fakeKeyService,
+			SaltAccessor:  fakeSaltAccessor,
+			NonceAccessor: fakeNonceAccessor,
+			DbMapper:      fakeDbMapper,
+		}
+
+		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
 				EncryptionKeyLabel:      "key-1",
 				ScratchCodes:            scratchCodes,
 				SecretKey:               secretKey,
 				EncryptedValidationCode: encryptedValidationCode,
 			},
-			fakeKeyService,
-			fakeSaltAccessor,
-			fakeNonceAccessor,
-			fakeDbMapper,
 		)
 
 		Expect(rotatorError).To(HaveOccurred())
@@ -256,17 +268,20 @@ var _ = Describe("Rotator", func() {
 		var errorStr = "some error" + time.Now().String()
 		fakeEncryptor.EncryptReturnsOnCall(errorIndex, crypto.EncryptedValue{}, errors.New(errorStr))
 
-		updatedCredential, rotatorError = rotator.Rotate(
+		uaaRotator = rotator.UAARotator{
+			KeyService:    fakeKeyService,
+			SaltAccessor:  fakeSaltAccessor,
+			NonceAccessor: fakeNonceAccessor,
+			DbMapper:      fakeDbMapper,
+		}
+
+		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
 				EncryptionKeyLabel:      "key-1",
 				ScratchCodes:            scratchCodes,
 				SecretKey:               secretKey,
 				EncryptedValidationCode: encryptedValidationCode,
 			},
-			fakeKeyService,
-			fakeSaltAccessor,
-			fakeNonceAccessor,
-			fakeDbMapper,
 		)
 
 		Expect(rotatorError).To(HaveOccurred())

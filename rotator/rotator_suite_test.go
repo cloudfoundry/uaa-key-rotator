@@ -9,5 +9,5 @@ import (
 
 func TestRotator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Rotator Suite")
+	RunSpecs(t, "UAARotator Suite")
 }

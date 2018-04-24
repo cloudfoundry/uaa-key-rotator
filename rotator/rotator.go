@@ -17,26 +17,28 @@ type MapEncryptedValueToDB interface {
 	Map(value crypto.EncryptedValue) ([]byte, error)
 }
 
-func Rotate(credential entity.MfaCredential,
-	keyService KeyService,
-	saltAccessor crypto.CipherSaltAccessor,
-	nonceAccessor crypto.CipherNonceAccessor,
-	dbMapper MapEncryptedValueToDB,
-) (entity.MfaCredential, error) {
-	decryptor := keyService.Key(credential.EncryptionKeyLabel)
-	activeKeyLabel, activeKey := keyService.ActiveKey()
+type UAARotator struct {
+	KeyService    KeyService
+	SaltAccessor  crypto.CipherSaltAccessor
+	NonceAccessor crypto.CipherNonceAccessor
+	DbMapper      MapEncryptedValueToDB
+}
 
-	rotatedScratchCodes, err := rotate(activeKey, decryptor, saltAccessor, nonceAccessor, dbMapper, []byte(credential.ScratchCodes))
+func (r UAARotator) Rotate(credential entity.MfaCredential) (entity.MfaCredential, error) {
+	decryptor := r.KeyService.Key(credential.EncryptionKeyLabel)
+	activeKeyLabel, encryptor := r.KeyService.ActiveKey()
+
+	rotatedScratchCodes, err := r.rotate(encryptor, decryptor, []byte(credential.ScratchCodes))
 	if err != nil {
 		return entity.MfaCredential{}, err
 	}
 
-	rotatedSecretKey, err := rotate(activeKey, decryptor, saltAccessor, nonceAccessor, dbMapper, []byte(credential.SecretKey))
+	rotatedSecretKey, err := r.rotate(encryptor, decryptor, []byte(credential.SecretKey))
 	if err != nil {
 		return entity.MfaCredential{}, err
 	}
 
-	rotatedEncryptedValidationCode, err := rotate(activeKey, decryptor, saltAccessor, nonceAccessor, dbMapper, []byte(credential.EncryptedValidationCode))
+	rotatedEncryptedValidationCode, err := r.rotate(encryptor, decryptor, []byte(credential.EncryptedValidationCode))
 	if err != nil {
 		return entity.MfaCredential{}, err
 	}
@@ -49,37 +51,31 @@ func Rotate(credential entity.MfaCredential,
 	return credential, nil
 }
 
-func rotate(activeKey crypto.Encryptor,
-	decryptor crypto.Decryptor,
-	saltAccessor crypto.CipherSaltAccessor,
-	nonceAccessor crypto.CipherNonceAccessor,
-	dbMapper MapEncryptedValueToDB,
-	cipherValue []byte) ([]byte, error) {
-
-	salt, err := getSalt(saltAccessor, cipherValue)
+func (r UAARotator) rotate(encryptor crypto.Encryptor, decryptor crypto.Decryptor, cipherValue []byte) ([]byte, error) {
+	salt, err := r.getSalt(cipherValue)
 	if err != nil {
 		return nil, err
 	}
 
-	nonce, err := getNonce(nonceAccessor, cipherValue)
+	nonce, err := r.getNonce(cipherValue)
 	if err != nil {
 		return nil, err
 	}
 
-	decryptedValue, err := decrypt(decryptor, cipherValue, salt, nonce)
+	decryptedValue, err := r.decrypt(decryptor, cipherValue, salt, nonce)
 	if err != nil {
 		return nil, err
 	}
 
-	reEncryptedValue, err := encrypt(activeKey, decryptedValue)
+	reEncryptedValue, err := r.encrypt(encryptor, decryptedValue)
 	if err != nil {
 		return nil, err
 	}
 
-	return dbMapper.Map(reEncryptedValue)
+	return r.DbMapper.Map(reEncryptedValue)
 }
 
-func encrypt(activeKey crypto.Encryptor, decryptedValue string) (crypto.EncryptedValue, error) {
+func (r UAARotator) encrypt(activeKey crypto.Encryptor, decryptedValue string) (crypto.EncryptedValue, error) {
 	reEncryptedValue, err := activeKey.Encrypt(decryptedValue)
 	if err != nil {
 		return crypto.EncryptedValue{}, errors.Wrap(err, "unable to encrypt value provided")
@@ -87,7 +83,7 @@ func encrypt(activeKey crypto.Encryptor, decryptedValue string) (crypto.Encrypte
 	return reEncryptedValue, nil
 }
 
-func decrypt(decryptor crypto.Decryptor, cipherValue []byte, salt []byte, nonce []byte) (string, error) {
+func (r UAARotator) decrypt(decryptor crypto.Decryptor, cipherValue []byte, salt []byte, nonce []byte) (string, error) {
 	decrpytedValue, err := decryptor.Decrypt(
 		crypto.EncryptedValue{
 			CipherValue: []byte(cipherValue),
@@ -101,16 +97,16 @@ func decrypt(decryptor crypto.Decryptor, cipherValue []byte, salt []byte, nonce 
 	return decrpytedValue, nil
 }
 
-func getSalt(saltAccessor crypto.CipherSaltAccessor, cipherValue []byte) ([]byte, error) {
-	scratchCodeSalt, err := saltAccessor.GetSalt(cipherValue)
+func (r UAARotator) getSalt(cipherValue []byte) ([]byte, error) {
+	scratchCodeSalt, err := r.SaltAccessor.GetSalt(cipherValue)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to access salt from cipher value provided")
 	}
 	return scratchCodeSalt, err
 }
 
-func getNonce(nonceAccessor crypto.CipherNonceAccessor, cipherValue []byte) ([]byte, error) {
-	nonce, err := nonceAccessor.GetNonce(cipherValue)
+func (r UAARotator) getNonce(cipherValue []byte) ([]byte, error) {
+	nonce, err := r.NonceAccessor.GetNonce(cipherValue)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to access nonce from cipher value provided")
 	}
