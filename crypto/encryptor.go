@@ -3,6 +3,7 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"github.com/pkg/errors"
 )
 
 //go:generate counterfeiter . SaltGenerator
@@ -35,13 +36,11 @@ type Encryptor interface {
 func (e UAAEncryptor) Encrypt(plainText string) (EncryptedValue, error) {
 	salt, err := e.SaltGenerator.GetSalt()
 	if err != nil {
-		//TODO: handle error
-		panic(err)
+		return EncryptedValue{}, errors.Wrap(err, "unable to generate a salt")
 	}
 	nonce, err := e.NonceGenerator.GetNonce()
 	if err != nil {
-		//TODO: handle error
-		panic(err)
+		return EncryptedValue{}, errors.Wrap(err, "unable to generate a nonce")
 	}
 
 	aes, err := aes.NewCipher(GenerateKey(salt, e.Passphrase))
