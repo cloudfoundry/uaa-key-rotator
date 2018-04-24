@@ -96,13 +96,13 @@ var _ = Describe("Rotator", func() {
 		fakeEncryptor.EncryptReturnsOnCall(2, fakeEncryptedEncryptedValidationCode, nil)
 
 		fakeRotatedScratchCode = "encrypted scratch code"
-		fakeDbMapper.MapReturnsOnCall(0, []byte(fakeRotatedScratchCode))
+		fakeDbMapper.MapReturnsOnCall(0, []byte(fakeRotatedScratchCode), nil)
 
 		fakeRotatedSecretKey = "rotated secret key"
-		fakeDbMapper.MapReturnsOnCall(1, []byte(fakeRotatedSecretKey))
+		fakeDbMapper.MapReturnsOnCall(1, []byte(fakeRotatedSecretKey), nil)
 
 		fakeRotatedEncryptedValidationCode = "rotated encrypted validation code"
-		fakeDbMapper.MapReturnsOnCall(2, []byte(fakeRotatedEncryptedValidationCode))
+		fakeDbMapper.MapReturnsOnCall(2, []byte(fakeRotatedEncryptedValidationCode), nil)
 
 	})
 

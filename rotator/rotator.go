@@ -14,7 +14,7 @@ type KeyService interface {
 
 //go:generate counterfeiter . MapEncryptedValueToDB
 type MapEncryptedValueToDB interface {
-	Map(value crypto.EncryptedValue) []byte
+	Map(value crypto.EncryptedValue) ([]byte, error)
 }
 
 func Rotate(credential entity.MfaCredential,
@@ -76,7 +76,7 @@ func rotate(activeKey crypto.Encryptor,
 		return nil, err
 	}
 
-	return dbMapper.Map(reEncryptedValue), nil
+	return dbMapper.Map(reEncryptedValue)
 }
 
 func encrypt(activeKey crypto.Encryptor, decryptedValue string) (crypto.EncryptedValue, error) {

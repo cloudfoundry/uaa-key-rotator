@@ -9,22 +9,24 @@ import (
 )
 
 type FakeMapEncryptedValueToDB struct {
-	MapStub        func(value crypto.EncryptedValue) []byte
+	MapStub        func(value crypto.EncryptedValue) ([]byte, error)
 	mapMutex       sync.RWMutex
 	mapArgsForCall []struct {
 		value crypto.EncryptedValue
 	}
 	mapReturns struct {
 		result1 []byte
+		result2 error
 	}
 	mapReturnsOnCall map[int]struct {
 		result1 []byte
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeMapEncryptedValueToDB) Map(value crypto.EncryptedValue) []byte {
+func (fake *FakeMapEncryptedValueToDB) Map(value crypto.EncryptedValue) ([]byte, error) {
 	fake.mapMutex.Lock()
 	ret, specificReturn := fake.mapReturnsOnCall[len(fake.mapArgsForCall)]
 	fake.mapArgsForCall = append(fake.mapArgsForCall, struct {
@@ -36,9 +38,9 @@ func (fake *FakeMapEncryptedValueToDB) Map(value crypto.EncryptedValue) []byte {
 		return fake.MapStub(value)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.mapReturns.result1
+	return fake.mapReturns.result1, fake.mapReturns.result2
 }
 
 func (fake *FakeMapEncryptedValueToDB) MapCallCount() int {
@@ -53,23 +55,26 @@ func (fake *FakeMapEncryptedValueToDB) MapArgsForCall(i int) crypto.EncryptedVal
 	return fake.mapArgsForCall[i].value
 }
 
-func (fake *FakeMapEncryptedValueToDB) MapReturns(result1 []byte) {
+func (fake *FakeMapEncryptedValueToDB) MapReturns(result1 []byte, result2 error) {
 	fake.MapStub = nil
 	fake.mapReturns = struct {
 		result1 []byte
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeMapEncryptedValueToDB) MapReturnsOnCall(i int, result1 []byte) {
+func (fake *FakeMapEncryptedValueToDB) MapReturnsOnCall(i int, result1 []byte, result2 error) {
 	fake.MapStub = nil
 	if fake.mapReturnsOnCall == nil {
 		fake.mapReturnsOnCall = make(map[int]struct {
 			result1 []byte
+			result2 error
 		})
 	}
 	fake.mapReturnsOnCall[i] = struct {
 		result1 []byte
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeMapEncryptedValueToDB) Invocations() map[string][][]interface{} {
