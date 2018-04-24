@@ -13,15 +13,16 @@ import (
 )
 
 var (
-	activeKeyLabel      string
-	activeKeyPassphrase string
+	activeKeyLabel string
 )
 
 var _ = Describe("Config", func() {
 	var tempConfigFile *os.File
 	configFileContent := `{ 
 					"activeKeyLabel": "key1",
-					"activeKeyPassphrase": "passphrase",
+					"encryptionKeys": [
+						{"label": "active-key", "passphrase": "secret"}
+					],
 					"databaseHostname": "localhost",
 					"databasePort": "5432",
 					"databaseName": "uaadb",
@@ -45,7 +46,9 @@ var _ = Describe("Config", func() {
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(rotatorConfig.ActiveKeyLabel).To(Equal("key1"))
-		Expect(rotatorConfig.ActiveKeyPassphrase).To(Equal("passphrase"))
+		Expect(rotatorConfig.EncryptionKeys).To(ConsistOf(config.EncryptionKey{
+			Label: "active-key", Passphrase: "secret",
+		}))
 		Expect(rotatorConfig.DatabaseHostname).To(Equal("localhost"))
 		Expect(rotatorConfig.DatabasePort).To(Equal("5432"))
 		Expect(rotatorConfig.DatabaseScheme).To(Equal("postgresql"))
@@ -55,22 +58,24 @@ var _ = Describe("Config", func() {
 	})
 
 	Context("when given an invalid json config file", func() {
-		var requiredFields map[string]string
+		var requiredFields map[string]interface{}
 
 		BeforeEach(func() {
-			requiredFields = map[string]string{
-				"activeKeyLabel":      "active-key-value",
-				"activeKeyPassphrase": "active-key-passphrase",
-				"databaseHostname":    "db-hostname",
-				"databasePort":        "db-port",
-				"databaseScheme":      "db-scheme",
-				"databaseName":        "db-name",
-				"databaseUsername":    "db-username",
-				"databasePassword":    "db-password",
+			requiredFields = map[string]interface{}{
+				"activeKeyLabel": "active-key-value",
+				"encryptionKeys": []map[string]string{
+					{"label": "active-key", "passphrase": "secret2"},
+				},
+				"databaseHostname": "db-hostname",
+				"databasePort":     "db-port",
+				"databaseScheme":   "db-scheme",
+				"databaseName":     "db-name",
+				"databaseUsername": "db-username",
+				"databasePassword": "db-password",
 			}
 		})
 
-		table.DescribeTable("invalid fields", func(invalidKey, invalidValue, errorDescription string) {
+		table.DescribeTable("invalid fields", func(invalidKey string, invalidValue interface{}, errorDescription string) {
 			cfg := cloneMap(requiredFields)
 
 			cfg[invalidKey] = invalidValue
@@ -84,7 +89,9 @@ var _ = Describe("Config", func() {
 
 		},
 			table.Entry("invalid active key label", "activeKeyLabel", "", "Invalid config.: ActiveKeyLabel: zero value"),
-			table.Entry("invalid active key passphrase", "activeKeyPassphrase", "", "Invalid config.: ActiveKeyPassphrase: zero value"),
+			table.Entry("invalid encryption keys", "encryptionKeys", []map[string]string{}, "Invalid config.: EncryptionKeys: zero value"),
+			table.Entry("invalid encryption keys", "encryptionKeys", []map[string]string{{"foobar": "value", "passphrase": "secret"}}, "Invalid config.: EncryptionKeys[0].Label: zero value"),
+			table.Entry("invalid encryption keys", "encryptionKeys", []map[string]string{{"label": "value", "asdfasf": "secret"}}, "Invalid config.: EncryptionKeys[0].Passphrase: zero value"),
 			table.Entry("invalid db hostname", "databaseHostname", "", "Invalid config.: DatabaseHostname: zero value"),
 			table.Entry("invalid db port", "databasePort", "", "Invalid config.: DatabasePort: zero value"),
 			table.Entry("invalid db scheme", "databaseScheme", "", "Invalid config.: DatabaseScheme: zero value"),
@@ -125,8 +132,8 @@ func (BadConfigFile) Read(p []byte) (int, error) {
 	return 0, errors.New("cannot read")
 }
 
-func cloneMap(requiredFields map[string]string) map[string]string {
-	configMap := map[string]string{}
+func cloneMap(requiredFields map[string]interface{}) map[string]interface{} {
+	configMap := map[string]interface{}{}
 
 	for key, value := range requiredFields {
 		configMap[key] = value

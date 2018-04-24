@@ -8,9 +8,14 @@ import (
 	"github.com/pkg/errors"
 )
 
+type EncryptionKey struct {
+	Label string `json:"label" validate:"nonzero"`
+	Passphrase string `json:"passphrase" validate:"nonzero"`
+}
+
 type RotatorConfig struct {
 	ActiveKeyLabel      string `json:"activeKeyLabel" validate:"nonzero"`
-	ActiveKeyPassphrase string `json:"activeKeyPassphrase" validate:"nonzero"`
+	EncryptionKeys		[]EncryptionKey `json:"encryptionKeys" validate:"nonzero"`
 	DatabaseHostname    string `json:"databaseHostname" validate:"nonzero"`
 	DatabasePort        string `json:"databasePort" validate:"nonzero"`
 	DatabaseScheme      string `json:"databaseScheme" validate:"nonzero"`

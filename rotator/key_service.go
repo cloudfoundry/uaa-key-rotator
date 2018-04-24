@@ -30,19 +30,19 @@ func (s UaaKeyService) Key(keyLabel string) (crypto.Decryptor, error) {
 	}, nil
 }
 
-func (s UaaKeyService) ActiveKey() (string, crypto.Encryptor) {
+func (s UaaKeyService) ActiveKey() (string, crypto.Encryptor, error) {
 	var key EncryptionKey
 	var found bool
 
 	if found, key = s.getEncryptionKey(s.ActiveKeyLabel); !found {
-		return "", nil
+		return "", nil, errors.New(fmt.Sprintf("unable to find active key: %s", s.ActiveKeyLabel))
 	}
 
 	return s.ActiveKeyLabel, crypto.UAAEncryptor{
 		Passphrase:     key.Passphrase,
 		SaltGenerator:  crypto.UaaSaltGenerator{},
 		NonceGenerator: crypto.UaaNonceGenerator{},
-	}
+	}, nil
 }
 
 func (s UaaKeyService) getEncryptionKey(label string) (bool, EncryptionKey) {
