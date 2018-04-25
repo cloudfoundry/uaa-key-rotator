@@ -9,6 +9,10 @@ import (
 
 type DbMapper struct{}
 
+func (DbMapper) MapBase64ToCipherValue(value string) ([]byte, error) {
+	panic("implement me")
+}
+
 func (DbMapper) Map(value crypto.EncryptedValue) ([]byte, error) {
 	var dbValue []byte
 	dbValue = append(dbValue, value.Nonce...)

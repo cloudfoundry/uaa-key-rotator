@@ -8,13 +8,14 @@ import (
 
 //go:generate counterfeiter . KeyService
 type KeyService interface {
-	Key(keyLabel string) crypto.Decryptor
-	ActiveKey() (string, crypto.Encryptor)
+	Key(keyLabel string) (crypto.Decryptor, error)
+	ActiveKey() (string, crypto.Encryptor, error)
 }
 
 //go:generate counterfeiter . MapEncryptedValueToDB
 type MapEncryptedValueToDB interface {
 	Map(value crypto.EncryptedValue) ([]byte, error)
+	MapBase64ToCipherValue(value string) ([]byte, error)
 }
 
 type UAARotator struct {
@@ -25,20 +26,27 @@ type UAARotator struct {
 }
 
 func (r UAARotator) Rotate(credential entity.MfaCredential) (entity.MfaCredential, error) {
-	decryptor := r.KeyService.Key(credential.EncryptionKeyLabel)
-	activeKeyLabel, encryptor := r.KeyService.ActiveKey()
+	decryptor, err := r.KeyService.Key(credential.EncryptionKeyLabel)
+	if err != nil {
+		return entity.MfaCredential{}, errors.Wrap(err, "Unable to decrypt mfa record")
+	}
 
-	rotatedScratchCodes, err := r.rotate(encryptor, decryptor, []byte(credential.ScratchCodes))
+	activeKeyLabel, encryptor, err := r.KeyService.ActiveKey()
+	if err != nil {
+		return entity.MfaCredential{}, errors.Wrap(err, "Unable to decrypt mfa record")
+	}
+
+	rotatedScratchCodes, err := r.rotateCipherValue(encryptor, decryptor, credential.ScratchCodes)
 	if err != nil {
 		return entity.MfaCredential{}, err
 	}
 
-	rotatedSecretKey, err := r.rotate(encryptor, decryptor, []byte(credential.SecretKey))
+	rotatedSecretKey, err := r.rotateCipherValue(encryptor, decryptor, credential.SecretKey)
 	if err != nil {
 		return entity.MfaCredential{}, err
 	}
 
-	rotatedEncryptedValidationCode, err := r.rotate(encryptor, decryptor, []byte(credential.EncryptedValidationCode))
+	rotatedEncryptedValidationCode, err := r.rotateCipherValue(encryptor, decryptor, credential.EncryptedValidationCode)
 	if err != nil {
 		return entity.MfaCredential{}, err
 	}
@@ -51,7 +59,12 @@ func (r UAARotator) Rotate(credential entity.MfaCredential) (entity.MfaCredentia
 	return credential, nil
 }
 
-func (r UAARotator) rotate(encryptor crypto.Encryptor, decryptor crypto.Decryptor, cipherValue []byte) ([]byte, error) {
+func (r UAARotator) rotateCipherValue(encryptor crypto.Encryptor, decryptor crypto.Decryptor, encodedCipherValue string) ([]byte, error) {
+	cipherValue, err := r.base64DecodeCipher(encodedCipherValue)
+	if err != nil {
+		return nil, err
+	}
+
 	salt, err := r.getSalt(cipherValue)
 	if err != nil {
 		return nil, err
@@ -111,5 +124,12 @@ func (r UAARotator) getNonce(cipherValue []byte) ([]byte, error) {
 		return nil, errors.Wrap(err, "unable to access nonce from cipher value provided")
 	}
 	return nonce, nil
+}
 
+func (r UAARotator) base64DecodeCipher(cipher string) ([]byte, error) {
+	scratchCodes, err := r.DbMapper.MapBase64ToCipherValue(cipher)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to decode mfa credential value")
+	}
+	return scratchCodes, nil
 }

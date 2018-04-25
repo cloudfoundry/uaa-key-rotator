@@ -9,33 +9,37 @@ import (
 )
 
 type FakeKeyService struct {
-	KeyStub        func(keyLabel string) crypto.Decryptor
+	KeyStub        func(keyLabel string) (crypto.Decryptor, error)
 	keyMutex       sync.RWMutex
 	keyArgsForCall []struct {
 		keyLabel string
 	}
 	keyReturns struct {
 		result1 crypto.Decryptor
+		result2 error
 	}
 	keyReturnsOnCall map[int]struct {
 		result1 crypto.Decryptor
+		result2 error
 	}
-	ActiveKeyStub        func() (string, crypto.Encryptor)
+	ActiveKeyStub        func() (string, crypto.Encryptor, error)
 	activeKeyMutex       sync.RWMutex
 	activeKeyArgsForCall []struct{}
 	activeKeyReturns     struct {
 		result1 string
 		result2 crypto.Encryptor
+		result3 error
 	}
 	activeKeyReturnsOnCall map[int]struct {
 		result1 string
 		result2 crypto.Encryptor
+		result3 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeKeyService) Key(keyLabel string) crypto.Decryptor {
+func (fake *FakeKeyService) Key(keyLabel string) (crypto.Decryptor, error) {
 	fake.keyMutex.Lock()
 	ret, specificReturn := fake.keyReturnsOnCall[len(fake.keyArgsForCall)]
 	fake.keyArgsForCall = append(fake.keyArgsForCall, struct {
@@ -47,9 +51,9 @@ func (fake *FakeKeyService) Key(keyLabel string) crypto.Decryptor {
 		return fake.KeyStub(keyLabel)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.keyReturns.result1
+	return fake.keyReturns.result1, fake.keyReturns.result2
 }
 
 func (fake *FakeKeyService) KeyCallCount() int {
@@ -64,26 +68,29 @@ func (fake *FakeKeyService) KeyArgsForCall(i int) string {
 	return fake.keyArgsForCall[i].keyLabel
 }
 
-func (fake *FakeKeyService) KeyReturns(result1 crypto.Decryptor) {
+func (fake *FakeKeyService) KeyReturns(result1 crypto.Decryptor, result2 error) {
 	fake.KeyStub = nil
 	fake.keyReturns = struct {
 		result1 crypto.Decryptor
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeKeyService) KeyReturnsOnCall(i int, result1 crypto.Decryptor) {
+func (fake *FakeKeyService) KeyReturnsOnCall(i int, result1 crypto.Decryptor, result2 error) {
 	fake.KeyStub = nil
 	if fake.keyReturnsOnCall == nil {
 		fake.keyReturnsOnCall = make(map[int]struct {
 			result1 crypto.Decryptor
+			result2 error
 		})
 	}
 	fake.keyReturnsOnCall[i] = struct {
 		result1 crypto.Decryptor
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeKeyService) ActiveKey() (string, crypto.Encryptor) {
+func (fake *FakeKeyService) ActiveKey() (string, crypto.Encryptor, error) {
 	fake.activeKeyMutex.Lock()
 	ret, specificReturn := fake.activeKeyReturnsOnCall[len(fake.activeKeyArgsForCall)]
 	fake.activeKeyArgsForCall = append(fake.activeKeyArgsForCall, struct{}{})
@@ -93,9 +100,9 @@ func (fake *FakeKeyService) ActiveKey() (string, crypto.Encryptor) {
 		return fake.ActiveKeyStub()
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.activeKeyReturns.result1, fake.activeKeyReturns.result2
+	return fake.activeKeyReturns.result1, fake.activeKeyReturns.result2, fake.activeKeyReturns.result3
 }
 
 func (fake *FakeKeyService) ActiveKeyCallCount() int {
@@ -104,26 +111,29 @@ func (fake *FakeKeyService) ActiveKeyCallCount() int {
 	return len(fake.activeKeyArgsForCall)
 }
 
-func (fake *FakeKeyService) ActiveKeyReturns(result1 string, result2 crypto.Encryptor) {
+func (fake *FakeKeyService) ActiveKeyReturns(result1 string, result2 crypto.Encryptor, result3 error) {
 	fake.ActiveKeyStub = nil
 	fake.activeKeyReturns = struct {
 		result1 string
 		result2 crypto.Encryptor
-	}{result1, result2}
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeKeyService) ActiveKeyReturnsOnCall(i int, result1 string, result2 crypto.Encryptor) {
+func (fake *FakeKeyService) ActiveKeyReturnsOnCall(i int, result1 string, result2 crypto.Encryptor, result3 error) {
 	fake.ActiveKeyStub = nil
 	if fake.activeKeyReturnsOnCall == nil {
 		fake.activeKeyReturnsOnCall = make(map[int]struct {
 			result1 string
 			result2 crypto.Encryptor
+			result3 error
 		})
 	}
 	fake.activeKeyReturnsOnCall[i] = struct {
 		result1 string
 		result2 crypto.Encryptor
-	}{result1, result2}
+		result3 error
+	}{result1, result2, result3}
 }
 
 func (fake *FakeKeyService) Invocations() map[string][][]interface{} {

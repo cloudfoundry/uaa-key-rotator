@@ -20,6 +20,14 @@ var _ = Describe("UAARotator", func() {
 	var updatedCredential entity.MfaCredential
 	var rotatorError error
 
+	var scratchCodes string
+	var secretKey string
+	var encryptedValidationCode string
+
+	var base64ScratchCodes string
+	var base64SecretKey string
+	var base64EncryptedValidationCode string
+
 	var activeKeyLabel string
 	var fakeKeyService *rotatorfakes.FakeKeyService
 
@@ -34,9 +42,7 @@ var _ = Describe("UAARotator", func() {
 	var fakeDecrpytedScratchCodes string
 	var fakeDecryptedSecretKey string
 	var fakeDecryptedValidationCode string
-	var scratchCodes string
-	var secretKey string
-	var encryptedValidationCode string
+
 	var secretKeySalt string
 	var encryptedValidationCodeSalt string
 	var scratchCodesSalt string
@@ -57,11 +63,14 @@ var _ = Describe("UAARotator", func() {
 		fakeSaltAccessor = &cryptofakes.FakeCipherSaltAccessor{}
 		fakeNonceAccessor = &cryptofakes.FakeCipherNonceAccessor{}
 
+		base64ScratchCodes = "base64-encrypted-scratch-codes" + time.Now().String()
 		scratchCodes = "encrypted-scratch-codes" + time.Now().String()
+		base64SecretKey = "base64-secret-key" + time.Now().String()
 		secretKey = "secret-key" + time.Now().String()
+		base64EncryptedValidationCode = "base64-encrypted-validation-code" + time.Now().String()
 		encryptedValidationCode = "encrypted-validation-code" + time.Now().String()
 
-		fakeKeyService.KeyReturns(fakeDecryptor)
+		fakeKeyService.KeyReturns(fakeDecryptor, nil)
 		fakeDecrpytedScratchCodes = "whatever-we-return-in-our-fake" + time.Now().String()
 		fakeDecryptedSecretKey = "decrypted secret key" + time.Now().String()
 		fakeDecryptedValidationCode = "validation code secret key" + time.Now().String()
@@ -86,9 +95,14 @@ var _ = Describe("UAARotator", func() {
 
 		fakeEncryptor = &cryptofakes.FakeEncryptor{}
 		activeKeyLabel = "key-2"
-		fakeKeyService.ActiveKeyReturns(activeKeyLabel, fakeEncryptor)
+		fakeKeyService.ActiveKeyReturns(activeKeyLabel, fakeEncryptor, nil)
 
 		fakeDbMapper = &rotatorfakes.FakeMapEncryptedValueToDB{}
+
+		fakeDbMapper.MapBase64ToCipherValueReturnsOnCall(0, []byte(scratchCodes), nil)
+		fakeDbMapper.MapBase64ToCipherValueReturnsOnCall(1, []byte(secretKey), nil)
+		fakeDbMapper.MapBase64ToCipherValueReturnsOnCall(2, []byte(encryptedValidationCode), nil)
+
 		fakeEncryptedScratchCode = crypto.EncryptedValue{CipherValue: []byte("rotated_scratch_code")}
 		fakeEncryptor.EncryptReturnsOnCall(0, fakeEncryptedScratchCode, nil)
 		fakeEncryptedSecretKey = crypto.EncryptedValue{CipherValue: []byte("rotated_secret_key")}
@@ -107,7 +121,142 @@ var _ = Describe("UAARotator", func() {
 
 	})
 
-	JustBeforeEach(func() {
+	Context("rotator is configured correctly", func() {
+		JustBeforeEach(func() {
+			uaaRotator = rotator.UAARotator{
+				KeyService:    fakeKeyService,
+				SaltAccessor:  fakeSaltAccessor,
+				NonceAccessor: fakeNonceAccessor,
+				DbMapper:      fakeDbMapper,
+			}
+			updatedCredential, rotatorError = uaaRotator.Rotate(
+				entity.MfaCredential{
+					UserId:                  "some-user-id",
+					MfaProviderId:           "some-provider-id",
+					ZoneId:                  "some-zone-id",
+					EncryptionKeyLabel:      "key-1",
+					ValidationCode:          sql.NullInt64{Int64: 1},
+					ScratchCodes:            base64ScratchCodes,
+					SecretKey:               base64SecretKey,
+					EncryptedValidationCode: base64EncryptedValidationCode,
+				},
+			)
+
+			Expect(updatedCredential.ValidationCode).To(Equal(sql.NullInt64{Int64: 1}))
+			Expect(updatedCredential.EncryptionKeyLabel).To(Equal(activeKeyLabel))
+			Expect(updatedCredential.UserId).To(Equal("some-user-id"))
+			Expect(string(updatedCredential.MfaProviderId)).To(Equal("some-provider-id"))
+			Expect(string(updatedCredential.ZoneId)).To(Equal("some-zone-id"))
+
+		})
+
+		It("should rotate encrypted values from using one key to another", func() {
+			Expect(rotatorError).NotTo(HaveOccurred())
+			Expect(fakeKeyService.KeyCallCount()).To(Equal(1))
+
+			decryptArgsForScratchCodes := fakeDecryptor.DecryptArgsForCall(0)
+			Expect(string(decryptArgsForScratchCodes.CipherValue)).To(Equal(scratchCodes))
+			Expect(string(decryptArgsForScratchCodes.Salt)).To(Equal(scratchCodesSalt))
+			Expect(string(decryptArgsForScratchCodes.Nonce)).To(Equal(scratchCodesNonce))
+
+			decryptArgsForSecretKey := fakeDecryptor.DecryptArgsForCall(1)
+			Expect(string(decryptArgsForSecretKey.CipherValue)).To(Equal(secretKey))
+			Expect(string(decryptArgsForSecretKey.Salt)).To(Equal(secretKeySalt))
+			Expect(string(decryptArgsForSecretKey.Nonce)).To(Equal(secretKeyNonce))
+
+			decryptArgsForEncryptedValidationCode := fakeDecryptor.DecryptArgsForCall(2)
+			Expect(string(decryptArgsForEncryptedValidationCode.CipherValue)).To(Equal(encryptedValidationCode))
+			Expect(string(decryptArgsForEncryptedValidationCode.Salt)).To(Equal(encryptedValidationCodeSalt))
+			Expect(string(decryptArgsForEncryptedValidationCode.Nonce)).To(Equal(encryptedValidationCodeNonce))
+
+			Expect(fakeKeyService.ActiveKeyCallCount()).To(Equal(1))
+			Expect(fakeEncryptor.EncryptCallCount()).To(Equal(3))
+
+			Expect(fakeEncryptor.EncryptArgsForCall(0)).To(Equal(fakeDecrpytedScratchCodes))
+			Expect(fakeEncryptor.EncryptArgsForCall(1)).To(Equal(fakeDecryptedSecretKey))
+			Expect(fakeEncryptor.EncryptArgsForCall(2)).To(Equal(fakeDecryptedValidationCode))
+
+			Expect(fakeDbMapper.MapCallCount()).To(Equal(3))
+			Expect(fakeDbMapper.MapArgsForCall(0)).To(Equal(fakeEncryptedScratchCode))
+			Expect(fakeDbMapper.MapArgsForCall(1)).To(Equal(fakeEncryptedSecretKey))
+			Expect(fakeDbMapper.MapArgsForCall(2)).To(Equal(fakeEncryptedEncryptedValidationCode))
+
+			Expect(updatedCredential).To(MatchFields(IgnoreExtras, Fields{
+				"ScratchCodes":            Equal(fakeRotatedScratchCode),
+				"SecretKey":               Equal(fakeRotatedSecretKey),
+				"EncryptedValidationCode": Equal(fakeRotatedEncryptedValidationCode),
+			}))
+		})
+
+	})
+
+	Context("Attempting to rotate with an unknown key", func() {
+		BeforeEach(func() {
+			fakeKeyService.KeyReturns(nil, errors.New("Couldn't find key with label=key-1"))
+		})
+
+		JustBeforeEach(func() {
+			uaaRotator = rotator.UAARotator{
+				KeyService:    fakeKeyService,
+				SaltAccessor:  fakeSaltAccessor,
+				NonceAccessor: fakeNonceAccessor,
+				DbMapper:      fakeDbMapper,
+			}
+			updatedCredential, rotatorError = uaaRotator.Rotate(
+				entity.MfaCredential{
+					UserId:                  "some-user-id",
+					MfaProviderId:           "some-provider-id",
+					ZoneId:                  "some-zone-id",
+					EncryptionKeyLabel:      "key-1",
+					ValidationCode:          sql.NullInt64{Int64: 1},
+					ScratchCodes:            base64ScratchCodes,
+					SecretKey:               base64SecretKey,
+					EncryptedValidationCode: base64EncryptedValidationCode,
+				},
+			)
+		})
+
+		It("Should return a meaningful error", func() {
+			Expect(rotatorError).To(HaveOccurred())
+			Expect(rotatorError).To(MatchError("Unable to decrypt mfa record: Couldn't find key with label=key-1"))
+		})
+	})
+
+	Context("Attempting to rotate with missing/invalid active key", func() {
+		BeforeEach(func() {
+			fakeKeyService.ActiveKeyReturns("", nil, errors.New("Configured active key is missing or invalid"))
+		})
+
+		JustBeforeEach(func() {
+			uaaRotator = rotator.UAARotator{
+				KeyService:    fakeKeyService,
+				SaltAccessor:  fakeSaltAccessor,
+				NonceAccessor: fakeNonceAccessor,
+				DbMapper:      fakeDbMapper,
+			}
+			updatedCredential, rotatorError = uaaRotator.Rotate(
+				entity.MfaCredential{
+					UserId:                  "some-user-id",
+					MfaProviderId:           "some-provider-id",
+					ZoneId:                  "some-zone-id",
+					EncryptionKeyLabel:      "key-1",
+					ValidationCode:          sql.NullInt64{Int64: 1},
+					ScratchCodes:            base64ScratchCodes,
+					SecretKey:               base64SecretKey,
+					EncryptedValidationCode: base64EncryptedValidationCode,
+				},
+			)
+		})
+
+		It("Should return a meaningful error", func() {
+			Expect(rotatorError).To(HaveOccurred())
+			Expect(rotatorError).To(MatchError("Unable to decrypt mfa record: Configured active key is missing or invalid"))
+		})
+	})
+
+	table.DescribeTable("Attempting to base64 decode", func(errorIndex int) {
+		fakeDbMapper.MapBase64ToCipherValueReturnsOnCall(errorIndex, []byte(scratchCodes), errors.New("some base64 decode error"))
+
 		uaaRotator = rotator.UAARotator{
 			KeyService:    fakeKeyService,
 			SaltAccessor:  fakeSaltAccessor,
@@ -121,57 +270,19 @@ var _ = Describe("UAARotator", func() {
 				ZoneId:                  "some-zone-id",
 				EncryptionKeyLabel:      "key-1",
 				ValidationCode:          sql.NullInt64{Int64: 1},
-				ScratchCodes:            scratchCodes,
-				SecretKey:               secretKey,
-				EncryptedValidationCode: encryptedValidationCode,
+				ScratchCodes:            base64ScratchCodes,
+				SecretKey:               base64SecretKey,
+				EncryptedValidationCode: base64EncryptedValidationCode,
 			},
 		)
 
-		Expect(updatedCredential.ValidationCode).To(Equal(sql.NullInt64{Int64: 1}))
-		Expect(updatedCredential.EncryptionKeyLabel).To(Equal(activeKeyLabel))
-		Expect(updatedCredential.UserId).To(Equal("some-user-id"))
-		Expect(string(updatedCredential.MfaProviderId)).To(Equal("some-provider-id"))
-		Expect(string(updatedCredential.ZoneId)).To(Equal("some-zone-id"))
-
-	})
-
-	It("should rotate encrypted values from using one key to another", func() {
-		Expect(rotatorError).NotTo(HaveOccurred())
-		Expect(fakeKeyService.KeyCallCount()).To(Equal(1))
-
-		decryptArgsForScratchCodes := fakeDecryptor.DecryptArgsForCall(0)
-		Expect(string(decryptArgsForScratchCodes.CipherValue)).To(Equal(scratchCodes))
-		Expect(string(decryptArgsForScratchCodes.Salt)).To(Equal(scratchCodesSalt))
-		Expect(string(decryptArgsForScratchCodes.Nonce)).To(Equal(scratchCodesNonce))
-
-		decryptArgsForSecretKey := fakeDecryptor.DecryptArgsForCall(1)
-		Expect(string(decryptArgsForSecretKey.CipherValue)).To(Equal(secretKey))
-		Expect(string(decryptArgsForSecretKey.Salt)).To(Equal(secretKeySalt))
-		Expect(string(decryptArgsForSecretKey.Nonce)).To(Equal(secretKeyNonce))
-
-		decryptArgsForEncryptedValidationCode := fakeDecryptor.DecryptArgsForCall(2)
-		Expect(string(decryptArgsForEncryptedValidationCode.CipherValue)).To(Equal(encryptedValidationCode))
-		Expect(string(decryptArgsForEncryptedValidationCode.Salt)).To(Equal(encryptedValidationCodeSalt))
-		Expect(string(decryptArgsForEncryptedValidationCode.Nonce)).To(Equal(encryptedValidationCodeNonce))
-
-		Expect(fakeKeyService.ActiveKeyCallCount()).To(Equal(1))
-		Expect(fakeEncryptor.EncryptCallCount()).To(Equal(3))
-
-		Expect(fakeEncryptor.EncryptArgsForCall(0)).To(Equal(fakeDecrpytedScratchCodes))
-		Expect(fakeEncryptor.EncryptArgsForCall(1)).To(Equal(fakeDecryptedSecretKey))
-		Expect(fakeEncryptor.EncryptArgsForCall(2)).To(Equal(fakeDecryptedValidationCode))
-
-		Expect(fakeDbMapper.MapCallCount()).To(Equal(3))
-		Expect(fakeDbMapper.MapArgsForCall(0)).To(Equal(fakeEncryptedScratchCode))
-		Expect(fakeDbMapper.MapArgsForCall(1)).To(Equal(fakeEncryptedSecretKey))
-		Expect(fakeDbMapper.MapArgsForCall(2)).To(Equal(fakeEncryptedEncryptedValidationCode))
-
-		Expect(updatedCredential).To(MatchFields(IgnoreExtras, Fields{
-			"ScratchCodes":            Equal(fakeRotatedScratchCode),
-			"SecretKey":               Equal(fakeRotatedSecretKey),
-			"EncryptedValidationCode": Equal(fakeRotatedEncryptedValidationCode),
-		}))
-	})
+		Expect(rotatorError).To(HaveOccurred())
+		Expect(rotatorError).To(MatchError("Unable to decode mfa credential value: some base64 decode error"))
+	},
+		table.Entry("when base64 decoding ScratchCodes fails", 0),
+		table.Entry("when base64 decoding SecretKey fails", 1),
+		table.Entry("when base64 decoding EncryptedValidationCode fails", 2),
+	)
 
 	table.DescribeTable("when accessing the salt returns an error", func(errorIndex int) {
 		fakeSaltAccessor = &cryptofakes.FakeCipherSaltAccessor{}
@@ -188,9 +299,9 @@ var _ = Describe("UAARotator", func() {
 		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
 				EncryptionKeyLabel:      "key-1",
-				ScratchCodes:            scratchCodes,
-				SecretKey:               secretKey,
-				EncryptedValidationCode: encryptedValidationCode,
+				ScratchCodes:            base64ScratchCodes,
+				SecretKey:               base64SecretKey,
+				EncryptedValidationCode: base64EncryptedValidationCode,
 			},
 		)
 
@@ -217,9 +328,9 @@ var _ = Describe("UAARotator", func() {
 		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
 				EncryptionKeyLabel:      "key-1",
-				ScratchCodes:            scratchCodes,
-				SecretKey:               secretKey,
-				EncryptedValidationCode: encryptedValidationCode,
+				ScratchCodes:            base64ScratchCodes,
+				SecretKey:               base64SecretKey,
+				EncryptedValidationCode: base64EncryptedValidationCode,
 			},
 		)
 
@@ -233,7 +344,7 @@ var _ = Describe("UAARotator", func() {
 
 	table.DescribeTable("when decrypting returns an error", func(errorIndex int) {
 		fakeDecryptor = &cryptofakes.FakeDecryptor{}
-		fakeKeyService.KeyReturns(fakeDecryptor)
+		fakeKeyService.KeyReturns(fakeDecryptor, nil)
 		var errorStr = "some error" + time.Now().String()
 		fakeDecryptor.DecryptReturnsOnCall(errorIndex, "", errors.New(errorStr))
 
@@ -247,9 +358,9 @@ var _ = Describe("UAARotator", func() {
 		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
 				EncryptionKeyLabel:      "key-1",
-				ScratchCodes:            scratchCodes,
-				SecretKey:               secretKey,
-				EncryptedValidationCode: encryptedValidationCode,
+				ScratchCodes:            base64ScratchCodes,
+				SecretKey:               base64SecretKey,
+				EncryptedValidationCode: base64EncryptedValidationCode,
 			},
 		)
 
@@ -263,7 +374,7 @@ var _ = Describe("UAARotator", func() {
 
 	table.DescribeTable("when encrypting returns an error", func(errorIndex int) {
 		fakeEncryptor = &cryptofakes.FakeEncryptor{}
-		fakeKeyService.ActiveKeyReturns(activeKeyLabel, fakeEncryptor)
+		fakeKeyService.ActiveKeyReturns(activeKeyLabel, fakeEncryptor, nil)
 
 		var errorStr = "some error" + time.Now().String()
 		fakeEncryptor.EncryptReturnsOnCall(errorIndex, crypto.EncryptedValue{}, errors.New(errorStr))

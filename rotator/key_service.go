@@ -15,6 +15,7 @@ type UaaKeyService struct {
 	ActiveKeyLabel string
 	EncryptionKeys []EncryptionKey
 }
+var _ KeyService = UaaKeyService{}
 
 func (s UaaKeyService) Key(keyLabel string) (crypto.Decryptor, error) {
 	var key EncryptionKey
