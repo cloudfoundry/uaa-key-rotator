@@ -9,15 +9,33 @@ import (
 )
 
 var _ = Describe("DbMapper", func() {
-	It("should map to base64 encoded string", func() {
-		encrypted := crypto.EncryptedValue{[]byte("salt"), []byte("nonce"), []byte("encryptedval")}
+	var dbMapper DbMapper
+	BeforeEach(func() {
+		dbMapper = DbMapper{}
+	})
 
-		mapped, err := DbMapper{}.Map(encrypted)
+	Describe("Map", func() {
+		It("should map to base64 encoded string", func() {
+			encrypted := crypto.EncryptedValue{[]byte("salt"), []byte("nonce"), []byte("encryptedval")}
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(mapped).NotTo(BeNil())
+			mapped, err := dbMapper.Map(encrypted)
 
-		//base64 <<< 'noncesaltencryptedval'
-		Expect(mapped).To(Equal([]byte("bm9uY2VzYWx0ZW5jcnlwdGVkdmFs")))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(mapped).NotTo(BeNil())
+
+			//base64 <<< 'noncesaltencryptedval'
+			Expect(mapped).To(Equal([]byte("bm9uY2VzYWx0ZW5jcnlwdGVkdmFs")))
+		})
+	})
+
+	Describe("MapBase64ToCipherValue", func() {
+		It("should decode a base64 encoded string", func() {
+			decodedValue, err := dbMapper.MapBase64ToCipherValue("bm9uY2VzYWx0ZW5jcnlwdGVkdmFs")
+			Expect(err).NotTo(HaveOccurred())
+
+			//base64 -D <<< 'bm9uY2VzYWx0ZW5jcnlwdGVkdmFs'
+			Expect(decodedValue).To(Equal([]byte("noncesaltencryptedval")))
+
+		})
 	})
 })

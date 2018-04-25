@@ -10,7 +10,7 @@ import (
 type DbMapper struct{}
 
 func (DbMapper) MapBase64ToCipherValue(value string) ([]byte, error) {
-	panic("implement me")
+	return base64.StdEncoding.DecodeString(value)
 }
 
 func (DbMapper) Map(value crypto.EncryptedValue) ([]byte, error) {
@@ -33,5 +33,4 @@ func (DbMapper) Map(value crypto.EncryptedValue) ([]byte, error) {
 	}
 
 	return dbValueWriter.Bytes(), nil
-
 }
