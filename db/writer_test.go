@@ -1,14 +1,14 @@
 package db_test
 
 import (
+	"errors"
+	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
+	"github.com/cloudfoundry/uaa-key-rotator/db/dbfakes"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
-	"time"
 	"strconv"
-	"github.com/cloudfoundry/uaa-key-rotator/db/dbfakes"
-	"errors"
-	"github.com/cloudfoundry/uaa-key-rotator/entity"
+	"time"
 )
 
 var _ = Describe("Writer", func() {

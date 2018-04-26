@@ -1,9 +1,10 @@
 package rotator_test
 
 import (
+	"github.com/cloudfoundry/uaa-key-rotator/config"
+	"github.com/cloudfoundry/uaa-key-rotator/rotator"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/cloudfoundry/uaa-key-rotator/rotator"
 	"time"
 )
 
@@ -13,7 +14,7 @@ var _ = Describe("KeyService", func() {
 	BeforeEach(func() {
 		uaaKeyService = rotator.UaaKeyService{
 			ActiveKeyLabel: "active-key-label",
-			EncryptionKeys: []rotator.EncryptionKey{
+			EncryptionKeys: []config.EncryptionKey{
 				{Label: "active-key-label", Passphrase: "passphrase1"},
 				{Label: "key-2", Passphrase: "passphrase2"},
 			},

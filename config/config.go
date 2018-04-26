@@ -1,27 +1,27 @@
 package config
 
 import (
-	"io"
 	"encoding/json"
-	"io/ioutil"
-	"gopkg.in/validator.v2"
 	"github.com/pkg/errors"
+	"gopkg.in/validator.v2"
+	"io"
+	"io/ioutil"
 )
 
 type EncryptionKey struct {
-	Label string `json:"label" validate:"nonzero"`
+	Label      string `json:"label" validate:"nonzero"`
 	Passphrase string `json:"passphrase" validate:"nonzero"`
 }
 
 type RotatorConfig struct {
-	ActiveKeyLabel      string `json:"activeKeyLabel" validate:"nonzero"`
-	EncryptionKeys		[]EncryptionKey `json:"encryptionKeys" validate:"nonzero"`
-	DatabaseHostname    string `json:"databaseHostname" validate:"nonzero"`
-	DatabasePort        string `json:"databasePort" validate:"nonzero"`
-	DatabaseScheme      string `json:"databaseScheme" validate:"nonzero"`
-	DatabaseName        string `json:"databaseName" validate:"nonzero"`
-	DatabaseUsername    string `json:"databaseUsername" validate:"nonzero"`
-	DatabasePassword    string `json:"databasePassword" validate:"nonzero"`
+	ActiveKeyLabel   string          `json:"activeKeyLabel" validate:"nonzero"`
+	EncryptionKeys   []EncryptionKey `json:"encryptionKeys" validate:"nonzero"`
+	DatabaseHostname string          `json:"databaseHostname" validate:"nonzero"`
+	DatabasePort     string          `json:"databasePort" validate:"nonzero"`
+	DatabaseScheme   string          `json:"databaseScheme" validate:"nonzero"`
+	DatabaseName     string          `json:"databaseName" validate:"nonzero"`
+	DatabaseUsername string          `json:"databaseUsername" validate:"nonzero"`
+	DatabasePassword string          `json:"databasePassword"`
 }
 
 func New(rotatorConfigReader io.Reader) (*RotatorConfig, error) {

@@ -1,8 +1,8 @@
 package rotator
 
 import (
-	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	"github.com/cloudfoundry/uaa-key-rotator/crypto"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	"github.com/pkg/errors"
 )
 
@@ -19,10 +19,11 @@ type MapEncryptedValueToDB interface {
 }
 
 type UAARotator struct {
-	KeyService    KeyService
-	SaltAccessor  crypto.CipherSaltAccessor
-	NonceAccessor crypto.CipherNonceAccessor
-	DbMapper      MapEncryptedValueToDB
+	KeyService     KeyService
+	SaltAccessor   crypto.CipherSaltAccessor
+	NonceAccessor  crypto.CipherNonceAccessor
+	CipherAccessor crypto.CipherAccessor
+	DbMapper       MapEncryptedValueToDB
 }
 
 func (r UAARotator) Rotate(credential entity.MfaCredential) (entity.MfaCredential, error) {
@@ -60,21 +61,25 @@ func (r UAARotator) Rotate(credential entity.MfaCredential) (entity.MfaCredentia
 }
 
 func (r UAARotator) rotateCipherValue(encryptor crypto.Encryptor, decryptor crypto.Decryptor, encodedCipherValue string) ([]byte, error) {
-	cipherValue, err := r.base64DecodeCipher(encodedCipherValue)
+	uaaCipherValue, err := r.base64DecodeCipher(encodedCipherValue)
 	if err != nil {
 		return nil, err
 	}
 
-	salt, err := r.getSalt(cipherValue)
+	salt, err := r.getSalt(uaaCipherValue)
 	if err != nil {
 		return nil, err
 	}
 
-	nonce, err := r.getNonce(cipherValue)
+	nonce, err := r.getNonce(uaaCipherValue)
 	if err != nil {
 		return nil, err
 	}
 
+	cipherValue, err := r.getCipherValue(uaaCipherValue)
+	if err != nil {
+		return nil, err
+	}
 	decryptedValue, err := r.decrypt(decryptor, cipherValue, salt, nonce)
 	if err != nil {
 		return nil, err
@@ -105,8 +110,8 @@ func (r UAARotator) decrypt(decryptor crypto.Decryptor, cipherValue []byte, salt
 		})
 	if err != nil {
 		return "", errors.Wrap(err, "unable to decrypt cipher value provided")
-
 	}
+
 	return decrpytedValue, nil
 }
 
@@ -124,6 +129,14 @@ func (r UAARotator) getNonce(cipherValue []byte) ([]byte, error) {
 		return nil, errors.Wrap(err, "unable to access nonce from cipher value provided")
 	}
 	return nonce, nil
+}
+
+func (r UAARotator) getCipherValue(uaaCipherValue []byte) ([]byte, error) {
+	cipherValue, err := r.CipherAccessor.GetCipher(uaaCipherValue)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to access cipher value from 'uaa' cipher value provided")
+	}
+	return cipherValue, nil
 }
 
 func (r UAARotator) base64DecodeCipher(cipher string) ([]byte, error) {

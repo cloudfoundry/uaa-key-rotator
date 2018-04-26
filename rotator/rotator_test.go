@@ -1,18 +1,18 @@
 package rotator_test
 
 import (
+	"database/sql"
+	"github.com/cloudfoundry/uaa-key-rotator/crypto"
+	"github.com/cloudfoundry/uaa-key-rotator/crypto/cryptofakes"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
+	"github.com/cloudfoundry/uaa-key-rotator/rotator"
+	"github.com/cloudfoundry/uaa-key-rotator/rotator/rotatorfakes"
 	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
-	"github.com/cloudfoundry/uaa-key-rotator/rotator/rotatorfakes"
-	"github.com/cloudfoundry/uaa-key-rotator/entity"
-	"github.com/cloudfoundry/uaa-key-rotator/crypto/cryptofakes"
-	"github.com/cloudfoundry/uaa-key-rotator/rotator"
 	"github.com/pkg/errors"
 	"time"
-	"github.com/onsi/ginkgo/extensions/table"
-	"github.com/cloudfoundry/uaa-key-rotator/crypto"
-	"database/sql"
 )
 
 var _ = Describe("UAARotator", func() {
@@ -36,6 +36,7 @@ var _ = Describe("UAARotator", func() {
 
 	var fakeSaltAccessor *cryptofakes.FakeCipherSaltAccessor
 	var fakeNonceAccessor *cryptofakes.FakeCipherNonceAccessor
+	var fakeCipherAccessor *cryptofakes.FakeCipherAccessor
 
 	var fakeDbMapper *rotatorfakes.FakeMapEncryptedValueToDB
 
@@ -62,6 +63,7 @@ var _ = Describe("UAARotator", func() {
 		fakeDecryptor = &cryptofakes.FakeDecryptor{}
 		fakeSaltAccessor = &cryptofakes.FakeCipherSaltAccessor{}
 		fakeNonceAccessor = &cryptofakes.FakeCipherNonceAccessor{}
+		fakeCipherAccessor = &cryptofakes.FakeCipherAccessor{}
 
 		base64ScratchCodes = "base64-encrypted-scratch-codes" + time.Now().String()
 		scratchCodes = "encrypted-scratch-codes" + time.Now().String()
@@ -92,6 +94,10 @@ var _ = Describe("UAARotator", func() {
 		fakeNonceAccessor.GetNonceReturnsOnCall(1, []byte(secretKeyNonce), nil)
 		encryptedValidationCodeNonce = "encrypted-validation-codes-nonce" + time.Now().String()
 		fakeNonceAccessor.GetNonceReturnsOnCall(2, []byte(encryptedValidationCodeNonce), nil)
+
+		fakeCipherAccessor.GetCipherReturnsOnCall(0, []byte(scratchCodes), nil)
+		fakeCipherAccessor.GetCipherReturnsOnCall(1, []byte(secretKey), nil)
+		fakeCipherAccessor.GetCipherReturnsOnCall(2, []byte(encryptedValidationCode), nil)
 
 		fakeEncryptor = &cryptofakes.FakeEncryptor{}
 		activeKeyLabel = "key-2"
@@ -124,10 +130,11 @@ var _ = Describe("UAARotator", func() {
 	Context("rotator is configured correctly", func() {
 		JustBeforeEach(func() {
 			uaaRotator = rotator.UAARotator{
-				KeyService:    fakeKeyService,
-				SaltAccessor:  fakeSaltAccessor,
-				NonceAccessor: fakeNonceAccessor,
-				DbMapper:      fakeDbMapper,
+				KeyService:     fakeKeyService,
+				SaltAccessor:   fakeSaltAccessor,
+				NonceAccessor:  fakeNonceAccessor,
+				CipherAccessor: fakeCipherAccessor,
+				DbMapper:       fakeDbMapper,
 			}
 			updatedCredential, rotatorError = uaaRotator.Rotate(
 				entity.MfaCredential{
@@ -197,10 +204,11 @@ var _ = Describe("UAARotator", func() {
 
 		JustBeforeEach(func() {
 			uaaRotator = rotator.UAARotator{
-				KeyService:    fakeKeyService,
-				SaltAccessor:  fakeSaltAccessor,
-				NonceAccessor: fakeNonceAccessor,
-				DbMapper:      fakeDbMapper,
+				KeyService:     fakeKeyService,
+				SaltAccessor:   fakeSaltAccessor,
+				NonceAccessor:  fakeNonceAccessor,
+				CipherAccessor: fakeCipherAccessor,
+				DbMapper:       fakeDbMapper,
 			}
 			updatedCredential, rotatorError = uaaRotator.Rotate(
 				entity.MfaCredential{
@@ -229,10 +237,11 @@ var _ = Describe("UAARotator", func() {
 
 		JustBeforeEach(func() {
 			uaaRotator = rotator.UAARotator{
-				KeyService:    fakeKeyService,
-				SaltAccessor:  fakeSaltAccessor,
-				NonceAccessor: fakeNonceAccessor,
-				DbMapper:      fakeDbMapper,
+				KeyService:     fakeKeyService,
+				SaltAccessor:   fakeSaltAccessor,
+				NonceAccessor:  fakeNonceAccessor,
+				CipherAccessor: fakeCipherAccessor,
+				DbMapper:       fakeDbMapper,
 			}
 			updatedCredential, rotatorError = uaaRotator.Rotate(
 				entity.MfaCredential{
@@ -258,10 +267,11 @@ var _ = Describe("UAARotator", func() {
 		fakeDbMapper.MapBase64ToCipherValueReturnsOnCall(errorIndex, []byte(scratchCodes), errors.New("some base64 decode error"))
 
 		uaaRotator = rotator.UAARotator{
-			KeyService:    fakeKeyService,
-			SaltAccessor:  fakeSaltAccessor,
-			NonceAccessor: fakeNonceAccessor,
-			DbMapper:      fakeDbMapper,
+			KeyService:     fakeKeyService,
+			SaltAccessor:   fakeSaltAccessor,
+			NonceAccessor:  fakeNonceAccessor,
+			CipherAccessor: fakeCipherAccessor,
+			DbMapper:       fakeDbMapper,
 		}
 		updatedCredential, rotatorError = uaaRotator.Rotate(
 			entity.MfaCredential{
@@ -290,10 +300,11 @@ var _ = Describe("UAARotator", func() {
 		fakeSaltAccessor.GetSaltReturnsOnCall(errorIndex, nil, errors.New(errorStr))
 
 		uaaRotator = rotator.UAARotator{
-			KeyService:    fakeKeyService,
-			SaltAccessor:  fakeSaltAccessor,
-			NonceAccessor: fakeNonceAccessor,
-			DbMapper:      fakeDbMapper,
+			KeyService:     fakeKeyService,
+			SaltAccessor:   fakeSaltAccessor,
+			NonceAccessor:  fakeNonceAccessor,
+			CipherAccessor: fakeCipherAccessor,
+			DbMapper:       fakeDbMapper,
 		}
 
 		updatedCredential, rotatorError = uaaRotator.Rotate(
@@ -313,16 +324,47 @@ var _ = Describe("UAARotator", func() {
 		table.Entry("when accessing salt for encrypted validation codes fails", 2),
 	)
 
+	table.DescribeTable("when accessing the uaa cipher returns an error", func(errorIndex int) {
+		fakeCipherAccessor = &cryptofakes.FakeCipherAccessor{}
+		var errorStr = "some error" + time.Now().String()
+		fakeCipherAccessor.GetCipherReturnsOnCall(errorIndex, nil, errors.New(errorStr))
+
+		uaaRotator = rotator.UAARotator{
+			KeyService:     fakeKeyService,
+			SaltAccessor:   fakeSaltAccessor,
+			NonceAccessor:  fakeNonceAccessor,
+			CipherAccessor: fakeCipherAccessor,
+			DbMapper:       fakeDbMapper,
+		}
+
+		updatedCredential, rotatorError = uaaRotator.Rotate(
+			entity.MfaCredential{
+				EncryptionKeyLabel:      "key-1",
+				ScratchCodes:            base64ScratchCodes,
+				SecretKey:               base64SecretKey,
+				EncryptedValidationCode: base64EncryptedValidationCode,
+			},
+		)
+
+		Expect(rotatorError).To(HaveOccurred())
+		Expect(rotatorError).To(MatchError("unable to access cipher value from 'uaa' cipher value provided: " + errorStr))
+	},
+		table.Entry("when accessing uaa cipher for scratch codes fails", 0),
+		table.Entry("when accessing uaa cipher for secret key fails", 1),
+		table.Entry("when accessing uaa cipher for encrypted validation codes fails", 2),
+	)
+
 	table.DescribeTable("when accessing the nonce returns an error", func(errorIndex int) {
 		fakeNonceAccessor = &cryptofakes.FakeCipherNonceAccessor{}
 		var errorStr = "some error" + time.Now().String()
 		fakeNonceAccessor.GetNonceReturnsOnCall(errorIndex, nil, errors.New(errorStr))
 
 		uaaRotator = rotator.UAARotator{
-			KeyService:    fakeKeyService,
-			SaltAccessor:  fakeSaltAccessor,
-			NonceAccessor: fakeNonceAccessor,
-			DbMapper:      fakeDbMapper,
+			KeyService:     fakeKeyService,
+			SaltAccessor:   fakeSaltAccessor,
+			NonceAccessor:  fakeNonceAccessor,
+			CipherAccessor: fakeCipherAccessor,
+			DbMapper:       fakeDbMapper,
 		}
 
 		updatedCredential, rotatorError = uaaRotator.Rotate(
@@ -349,10 +391,11 @@ var _ = Describe("UAARotator", func() {
 		fakeDecryptor.DecryptReturnsOnCall(errorIndex, "", errors.New(errorStr))
 
 		uaaRotator = rotator.UAARotator{
-			KeyService:    fakeKeyService,
-			SaltAccessor:  fakeSaltAccessor,
-			NonceAccessor: fakeNonceAccessor,
-			DbMapper:      fakeDbMapper,
+			KeyService:     fakeKeyService,
+			SaltAccessor:   fakeSaltAccessor,
+			NonceAccessor:  fakeNonceAccessor,
+			CipherAccessor: fakeCipherAccessor,
+			DbMapper:       fakeDbMapper,
 		}
 
 		updatedCredential, rotatorError = uaaRotator.Rotate(
@@ -380,10 +423,11 @@ var _ = Describe("UAARotator", func() {
 		fakeEncryptor.EncryptReturnsOnCall(errorIndex, crypto.EncryptedValue{}, errors.New(errorStr))
 
 		uaaRotator = rotator.UAARotator{
-			KeyService:    fakeKeyService,
-			SaltAccessor:  fakeSaltAccessor,
-			NonceAccessor: fakeNonceAccessor,
-			DbMapper:      fakeDbMapper,
+			KeyService:     fakeKeyService,
+			SaltAccessor:   fakeSaltAccessor,
+			NonceAccessor:  fakeNonceAccessor,
+			CipherAccessor: fakeCipherAccessor,
+			DbMapper:       fakeDbMapper,
 		}
 
 		updatedCredential, rotatorError = uaaRotator.Rotate(

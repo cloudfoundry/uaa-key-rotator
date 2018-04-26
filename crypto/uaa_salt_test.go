@@ -1,11 +1,11 @@
 package crypto_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/onsi/ginkgo/extensions/table"
 	"bytes"
 	. "github.com/cloudfoundry/uaa-key-rotator/crypto"
+	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("UaaSalt", func() {

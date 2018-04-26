@@ -1,11 +1,11 @@
 package db
 
 import (
-	"fmt"
-	"strings"
 	"database/sql"
-	"github.com/pkg/errors"
+	"fmt"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
+	"github.com/pkg/errors"
+	"strings"
 )
 
 var updateGoogleMfaCredentialQuery = `update

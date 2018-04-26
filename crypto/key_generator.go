@@ -1,10 +1,9 @@
 package crypto
 
 import (
-	"golang.org/x/crypto/pbkdf2"
 	"crypto/sha256"
+	"golang.org/x/crypto/pbkdf2"
 )
-
 
 const (
 	AES256KeyLength     = 32

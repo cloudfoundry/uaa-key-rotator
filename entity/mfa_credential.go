@@ -1,10 +1,10 @@
 package entity
 
 import (
-	"database/sql"
-	"strings"
 	"bytes"
+	"database/sql"
 	"errors"
+	"strings"
 )
 
 type MfaCredential struct {

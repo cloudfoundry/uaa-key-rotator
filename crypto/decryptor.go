@@ -12,7 +12,7 @@ type Decryptor interface {
 }
 
 type UAADecryptor struct {
-	Passphrase          string
+	Passphrase string
 }
 
 func (d UAADecryptor) Decrypt(encryptedValue EncryptedValue) (string, error) {

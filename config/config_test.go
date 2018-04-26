@@ -1,15 +1,15 @@
 package config_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/cloudfoundry/uaa-key-rotator/config"
-	"os"
-	"io/ioutil"
-	"errors"
-	"github.com/onsi/ginkgo/extensions/table"
 	"encoding/json"
+	"errors"
+	"github.com/cloudfoundry/uaa-key-rotator/config"
+	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"io/ioutil"
+	"os"
 )
 
 var (
@@ -96,7 +96,6 @@ var _ = Describe("Config", func() {
 			table.Entry("invalid db port", "databasePort", "", "Invalid config.: DatabasePort: zero value"),
 			table.Entry("invalid db scheme", "databaseScheme", "", "Invalid config.: DatabaseScheme: zero value"),
 			table.Entry("invalid db username", "databaseUsername", "", "Invalid config.: DatabaseUsername: zero value"),
-			table.Entry("invalid db password", "databasePassword", "", "Invalid config.: DatabasePassword: zero value"),
 			table.Entry("invalid db ", "databaseName", "", "Invalid config.: DatabaseName: zero value"),
 		)
 

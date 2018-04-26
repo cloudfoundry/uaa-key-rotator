@@ -1,11 +1,10 @@
 package db
 
 import (
-	"github.com/pkg/errors"
-	"github.com/jmoiron/sqlx"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
-
 
 //go:generate counterfeiter .
 // Queryer
@@ -33,4 +32,3 @@ func ReadAll(db Queryer) ([]entity.MfaCredential, error) {
 
 	return mfaCredentials, nil
 }
-

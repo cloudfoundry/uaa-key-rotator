@@ -1,9 +1,9 @@
 package rotator
 
 import (
-	"github.com/cloudfoundry/uaa-key-rotator/crypto"
-	"encoding/base64"
 	"bytes"
+	"encoding/base64"
+	"github.com/cloudfoundry/uaa-key-rotator/crypto"
 	"github.com/pkg/errors"
 )
 

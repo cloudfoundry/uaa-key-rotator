@@ -1,11 +1,11 @@
 package crypto_test
 
 import (
+	"bytes"
+	. "github.com/cloudfoundry/uaa-key-rotator/crypto"
+	"github.com/cloudfoundry/uaa-key-rotator/crypto/cryptofakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/cloudfoundry/uaa-key-rotator/crypto"
-	"bytes"
-	"github.com/cloudfoundry/uaa-key-rotator/crypto/cryptofakes"
 )
 
 var _ = Describe("UAAEncryptor", func() {
@@ -41,7 +41,7 @@ var _ = Describe("UAAEncryptor", func() {
 	JustBeforeEach(func() {
 		passphrase := "passphrase"
 		decryptor = UAADecryptor{
-			Passphrase:          passphrase,
+			Passphrase: passphrase,
 		}
 		encryptor = UAAEncryptor{
 			Passphrase:     passphrase,

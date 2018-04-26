@@ -1,24 +1,21 @@
 package rotator
 
 import (
+	"fmt"
+	"github.com/cloudfoundry/uaa-key-rotator/config"
 	"github.com/cloudfoundry/uaa-key-rotator/crypto"
 	"github.com/pkg/errors"
-	"fmt"
 )
-
-type EncryptionKey struct {
-	Label      string
-	Passphrase string
-}
 
 type UaaKeyService struct {
 	ActiveKeyLabel string
-	EncryptionKeys []EncryptionKey
+	EncryptionKeys []config.EncryptionKey
 }
+
 var _ KeyService = UaaKeyService{}
 
 func (s UaaKeyService) Key(keyLabel string) (crypto.Decryptor, error) {
-	var key EncryptionKey
+	var key config.EncryptionKey
 	var found bool
 
 	if found, key = s.getEncryptionKey(keyLabel); !found {
@@ -32,7 +29,7 @@ func (s UaaKeyService) Key(keyLabel string) (crypto.Decryptor, error) {
 }
 
 func (s UaaKeyService) ActiveKey() (string, crypto.Encryptor, error) {
-	var key EncryptionKey
+	var key config.EncryptionKey
 	var found bool
 
 	if found, key = s.getEncryptionKey(s.ActiveKeyLabel); !found {
@@ -46,12 +43,12 @@ func (s UaaKeyService) ActiveKey() (string, crypto.Encryptor, error) {
 	}, nil
 }
 
-func (s UaaKeyService) getEncryptionKey(label string) (bool, EncryptionKey) {
+func (s UaaKeyService) getEncryptionKey(label string) (bool, config.EncryptionKey) {
 	for _, key := range s.EncryptionKeys {
 		if key.Label == label {
 			return true, key
 		}
 	}
 
-	return false, EncryptionKey{}
+	return false, config.EncryptionKey{}
 }

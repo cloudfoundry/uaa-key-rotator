@@ -1,13 +1,13 @@
 package db_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"database/sql"
+	"errors"
 	. "github.com/cloudfoundry/uaa-key-rotator/db"
 	"github.com/cloudfoundry/uaa-key-rotator/db/dbfakes"
-	"errors"
-	"database/sql"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Postgresql", func() {
@@ -38,7 +38,7 @@ var _ = Describe("Postgresql", func() {
 				ZoneId:                  entity.Char("zone_id"),
 				ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
 				ScratchCodes:            "scratch_codes",
-				SecretKey:            	 "secret-key",
+				SecretKey:               "secret-key",
 				EncryptionKeyLabel:      "activeKeyLabel",
 				EncryptedValidationCode: "encrypted_validation_code",
 			},
@@ -47,7 +47,7 @@ var _ = Describe("Postgresql", func() {
 				MfaProviderId:           entity.Char("mfa_provider_id"),
 				ZoneId:                  entity.Char("zone_id"),
 				ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
-				SecretKey:            	 "secret-key",
+				SecretKey:               "secret-key",
 				ScratchCodes:            "scratch_codes",
 				EncryptionKeyLabel:      "activeKeyLabel",
 				EncryptedValidationCode: "encrypted_validation_code",
