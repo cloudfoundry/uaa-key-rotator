@@ -51,7 +51,7 @@ var _ = Describe("Config", func() {
 		}))
 		Expect(rotatorConfig.DatabaseHostname).To(Equal("localhost"))
 		Expect(rotatorConfig.DatabasePort).To(Equal("5432"))
-		Expect(rotatorConfig.DatabaseScheme).To(Equal("postgresql"))
+		Expect(rotatorConfig.DatabaseScheme).To(Equal("postgres"))
 		Expect(rotatorConfig.DatabaseName).To(Equal("uaadb"))
 		Expect(rotatorConfig.DatabaseUsername).To(Equal("admin"))
 		Expect(rotatorConfig.DatabasePassword).To(Equal("afdsafda"))

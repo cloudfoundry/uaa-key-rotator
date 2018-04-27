@@ -42,5 +42,9 @@ func New(rotatorConfigReader io.Reader) (*RotatorConfig, error) {
 		return nil, errors.Wrap(err, "Invalid config.")
 	}
 
+	if rotatorConfig.DatabaseScheme == "postgresql" {
+		rotatorConfig.DatabaseScheme = "postgres"
+	}
+
 	return rotatorConfig, nil
 }
