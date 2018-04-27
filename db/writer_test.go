@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"strconv"
 	"time"
+	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
 )
 
 var _ = Describe("Writer", func() {
@@ -43,7 +44,7 @@ var _ = Describe("Writer", func() {
 		}
 		mfaCredentialId3 := insertGoogleMfaCredential("userid_3")
 
-		err = db2.Write(db, updatedMfaCredential)
+		err = db2.Write(db2.DbAwareQuerier{DB: db, DBScheme: testutils.Scheme}, updatedMfaCredential)
 		Expect(err).NotTo(HaveOccurred())
 
 		mfaCredentials, err := db2.ReadAll(db)
@@ -52,10 +53,10 @@ var _ = Describe("Writer", func() {
 	})
 
 	Describe("when db error occurs", func() {
-		var mockDb *dbfakes.FakeUpdater
+		var mockDb *dbfakes.FakeQueryer
 		BeforeEach(func() {
-			mockDb = &dbfakes.FakeUpdater{}
-			mockDb.QueryReturns(nil, errors.New("some db error"))
+			mockDb = &dbfakes.FakeQueryer{}
+			mockDb.QueryxReturns(nil, errors.New("some db error"))
 		})
 		It("should return meaningful error", func() {
 			err := db2.Write(mockDb, entity.MfaCredential{})

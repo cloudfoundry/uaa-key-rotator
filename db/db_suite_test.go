@@ -50,7 +50,7 @@ func insertGoogleMfaCredential(userId string) entity.MfaCredential {
 		encrypted_validation_code) values(
 		?, ?, ?, ?, ?, ?, ?, ?
 		)`,
-		"postgres")
+		testutils.Scheme)
 
 	insertResult, err := db.Exec(insertSQL, mfaCredential.UserId,
 		mfaCredential.SecretKey,

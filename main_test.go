@@ -37,9 +37,9 @@ var _ = Describe("Main", func() {
 			DatabaseHostname: testutils.Hostname,
 			DatabaseName:     testutils.DBName,
 			DatabasePort:     testutils.Port,
-			DatabaseScheme:   "postgres",
-			DatabaseUsername: "postgres",
-			DatabasePassword: "",
+			DatabaseScheme:   testutils.Scheme,
+			DatabaseUsername: testutils.Username,
+			DatabasePassword: testutils.Password,
 		}
 
 		jsonConfig, err := json.Marshal(rotatorConfig)

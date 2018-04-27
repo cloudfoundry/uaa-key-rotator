@@ -39,17 +39,19 @@ func main() {
 	go rotate(rotatorConfig, rotatorChan)
 
 	select {
-	case <-rotatorChan:
-		os.Exit(0)
 	case s := <-sigChan:
 		if s == os.Interrupt {
 			fmt.Println("shutting down gracefully...")
 			os.Exit(1)
 		}
+	case <-rotatorChan:
+		os.Exit(0)
 	}
 }
 
 func rotate(rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
+	defer close(rotatorChan)
+
 	connStr := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable",
 		rotatorConfig.DatabaseScheme,
 		rotatorConfig.DatabaseUsername,
@@ -58,7 +60,7 @@ func rotate(rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 		rotatorConfig.DatabasePort,
 		rotatorConfig.DatabaseName,
 	)
-	db, err := getDbConn(connStr)
+	db, err := getDbConn(rotatorConfig.DatabaseScheme, connStr)
 	if err != nil {
 		panic(err)
 	}
@@ -89,17 +91,15 @@ func rotate(rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 		}
 	}
 	fmt.Println("rotator has finished")
-	close(rotatorChan)
 }
 
-func getDbConn(connectionString string) (*sqlx.DB, error) {
-	nativeDBConn, err := sql.Open("postgres", connectionString)
+func getDbConn(scheme string, connectionString string) (db2.Queryer, error) {
+	nativeDBConn, err := sql.Open(scheme, connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open database connection: %s", err)
 	}
 
-	dbConn := sqlx.NewDb(nativeDBConn, "postgres")
-
+	dbConn := sqlx.NewDb(nativeDBConn, scheme)
 	if err = dbConn.Ping(); err != nil {
 		dbConn.Close()
 		if netErr, ok := err.(*net.OpError); ok {
@@ -108,7 +108,7 @@ func getDbConn(connectionString string) (*sqlx.DB, error) {
 		return nil, fmt.Errorf("unable to ping: %s", err)
 	}
 
-	return dbConn, nil
+	return db2.DbAwareQuerier{DB: dbConn, DBScheme: scheme}, nil
 }
 
 //TODO: tls certs

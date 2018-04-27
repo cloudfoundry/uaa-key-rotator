@@ -1,11 +1,11 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	"github.com/pkg/errors"
 	"strings"
+	"github.com/jmoiron/sqlx"
 )
 
 var updateGoogleMfaCredentialQuery = `update
@@ -16,13 +16,21 @@ encryption_key_label = ?,
 encrypted_validation_code = ?
 where user_id = ?`
 
-//go:generate counterfeiter . Updater
-type Updater interface {
-	Query(query string, args ...interface{}) (*sql.Rows, error)
+type DbAwareQuerier struct {
+	DB       *sqlx.DB
+	DBScheme string
 }
 
-func Write(db Updater, credential entity.MfaCredential) error {
-	rs, err := db.Query(rebindForSQLDialect(updateGoogleMfaCredentialQuery, "postgres"),
+func (q DbAwareQuerier) Close() error {
+	return q.DB.Close()
+}
+
+func (q DbAwareQuerier) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	return q.DB.Queryx(RebindForSQLDialect(query, q.DBScheme), args...)
+}
+
+func Write(db Queryer, credential entity.MfaCredential) error {
+	rs, err := db.Queryx(updateGoogleMfaCredentialQuery,
 		credential.SecretKey,
 		credential.ScratchCodes,
 		credential.EncryptionKeyLabel,
@@ -36,7 +44,7 @@ func Write(db Updater, credential entity.MfaCredential) error {
 	return nil
 }
 
-func rebindForSQLDialect(query, dialect string) string {
+func RebindForSQLDialect(query, dialect string) string {
 	if dialect == "mysql" {
 		return query
 	}

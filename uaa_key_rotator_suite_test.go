@@ -82,7 +82,7 @@ func testFixtures() {
 		encrypted_validation_code) values(
 		?, ?, ?, ?, ?, ?, ?, ?
 		)`,
-		"postgres")
+		os.Getenv("DB_SCHEME"))
 
 	insertResult, err := db.Exec(insertSQL, mfaCredential.UserId,
 		mfaCredential.SecretKey,

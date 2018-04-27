@@ -6,10 +6,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-//go:generate counterfeiter .
-// Queryer
+
+//go:generate counterfeiter . Queryer
 type Queryer interface {
 	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
+	Close() error
 }
 
 func ReadAll(db Queryer) ([]entity.MfaCredential, error) {

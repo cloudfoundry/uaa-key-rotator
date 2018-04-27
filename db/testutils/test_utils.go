@@ -56,7 +56,7 @@ func TestDBConnection() *sqlx.DB {
 	Password = os.Getenv("DB_PASSWORD")
 	connStr := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", Scheme, Username, Password, Hostname, Port, DBName)
 
-	db, err := sqlx.Open("postgres", connStr)
+	db, err := sqlx.Open(Scheme, connStr)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(db.Ping()).Should(BeNil())
 	return db
