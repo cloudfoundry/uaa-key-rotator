@@ -10,11 +10,13 @@ import (
 	"github.com/cloudfoundry/uaa-key-rotator/rotator"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+	"strconv"
 )
 
 func main() {
@@ -52,15 +54,7 @@ func main() {
 func rotate(rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 	defer close(rotatorChan)
 
-	connStr := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable",
-		rotatorConfig.DatabaseScheme,
-		rotatorConfig.DatabaseUsername,
-		rotatorConfig.DatabasePassword,
-		rotatorConfig.DatabaseHostname,
-		rotatorConfig.DatabasePort,
-		rotatorConfig.DatabaseName,
-	)
-	db, err := getDbConn(rotatorConfig.DatabaseScheme, connStr)
+	db, err := getDbConn(rotatorConfig.DatabaseScheme, getConnString(rotatorConfig))
 	if err != nil {
 		panic(err)
 	}
@@ -91,6 +85,42 @@ func rotate(rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 		}
 	}
 	fmt.Println("rotator has finished")
+}
+
+func getConnString(rotatorConfig *config.RotatorConfig) string {
+	var connStr string
+	switch rotatorConfig.DatabaseScheme {
+	case "mysql":
+		{
+			timeout := 10
+
+			port, err := strconv.Atoi(rotatorConfig.DatabasePort)
+			if err != nil {
+				panic(err)
+			}
+			connStr = fmt.Sprintf(
+				"%s:%s@tcp(%s:%d)/%s?parseTime=true&timeout=%ds&readTimeout=%ds&writeTimeout=%ds",
+				rotatorConfig.DatabaseUsername,
+				rotatorConfig.DatabasePassword,
+				rotatorConfig.DatabaseHostname,
+				port,
+				rotatorConfig.DatabaseName,
+				timeout,
+				timeout,
+				timeout,
+			)
+		}
+	case "postgres":
+		connStr = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable",
+			rotatorConfig.DatabaseScheme,
+			rotatorConfig.DatabaseUsername,
+			rotatorConfig.DatabasePassword,
+			rotatorConfig.DatabaseHostname,
+			rotatorConfig.DatabasePort,
+			rotatorConfig.DatabaseName,
+		)
+	}
+	return connStr
 }
 
 func getDbConn(scheme string, connectionString string) (db2.Queryer, error) {

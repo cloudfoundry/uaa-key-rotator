@@ -80,16 +80,16 @@ func testFixtures() {
 		zone_id, 
 		encryption_key_label, 
 		encrypted_validation_code) values(
-		?, ?, ?, ?, ?, ?, ?, ?
-		)`,
-		os.Getenv("DB_SCHEME"))
+		?, ?, ?, ?, ?, ?, ?, ?)`,
+		testutils.Scheme)
 
-	insertResult, err := db.Exec(insertSQL, mfaCredential.UserId,
+	insertResult, err := db.Exec(insertSQL,
+		mfaCredential.UserId,
 		mfaCredential.SecretKey,
 		mfaCredential.ValidationCode,
 		mfaCredential.ScratchCodes,
-		mfaCredential.MfaProviderId,
-		mfaCredential.ZoneId,
+		string(mfaCredential.MfaProviderId),
+		string(mfaCredential.ZoneId),
 		mfaCredential.EncryptionKeyLabel,
 		mfaCredential.EncryptedValidationCode)
 	Expect(err).NotTo(HaveOccurred())

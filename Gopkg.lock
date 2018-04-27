@@ -2,6 +2,11 @@
 
 
 [[projects]]
+  name = "github.com/go-sql-driver/mysql"
+  packages = ["."]
+  revision = "37b91d8876474f11b8e419f2fa65b15824ab9b9c"
+
+[[projects]]
   branch = "master"
   name = "github.com/jmoiron/sqlx"
   packages = [
@@ -135,6 +140,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "664e62b64e632921d15f45de2abecd1718d6da08b31af07a2a31788596b0d494"
+  inputs-digest = "d6ca712bcc1872ebe458f3946e2d18da4fce7d39a60940a2be68ecbabec9b9ae"
   solver-name = "gps-cdcl"
   solver-version = 1

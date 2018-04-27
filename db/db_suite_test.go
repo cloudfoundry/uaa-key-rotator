@@ -56,8 +56,8 @@ func insertGoogleMfaCredential(userId string) entity.MfaCredential {
 		mfaCredential.SecretKey,
 		mfaCredential.ValidationCode,
 		mfaCredential.ScratchCodes,
-		mfaCredential.MfaProviderId,
-		mfaCredential.ZoneId,
+		string(mfaCredential.MfaProviderId),
+		string(mfaCredential.ZoneId),
 		mfaCredential.EncryptionKeyLabel,
 		mfaCredential.EncryptedValidationCode)
 

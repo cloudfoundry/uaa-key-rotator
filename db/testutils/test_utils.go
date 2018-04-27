@@ -3,6 +3,8 @@ package testutils
 import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -12,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"strconv"
 )
 
 var (
@@ -27,7 +30,12 @@ func MigrateUaaDatabase() {
 	uaaLocation, found := os.LookupEnv("UAA_LOCATION")
 	Expect(found).To(BeTrue(), "UAA_LOCATION env variable is required")
 	gradlePath := filepath.Join(uaaLocation, "gradlew")
-	gradleMigrateCommand := exec.Command(gradlePath, "flywayMigrate", "-Dspring.profiles.active=postgresql")
+
+	flywayProfile := Scheme
+	if Scheme == "postgres" {
+		flywayProfile = "postgresql"
+	}
+	gradleMigrateCommand := exec.Command(gradlePath, "flywayMigrate", "-Dspring.profiles.active="+flywayProfile)
 	gradleMigrateCommand.Dir = uaaLocation
 	gradleMigrateCommand.Env = append(gradleMigrateCommand.Env, fmt.Sprintf("JAVA_HOME=%s", os.Getenv("JAVA_HOME")))
 	session, err := gexec.Start(gradleMigrateCommand, GinkgoWriter, GinkgoWriter)
@@ -54,7 +62,17 @@ func TestDBConnection() *sqlx.DB {
 	DBName, found = os.LookupEnv("DB_NAME")
 	Expect(found).To(BeTrue(), "DB_NAME env variable is required")
 	Password = os.Getenv("DB_PASSWORD")
-	connStr := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", Scheme, Username, Password, Hostname, Port, DBName)
+
+	Timeout := 60
+	var connStr string
+	switch Scheme {
+	case "mysql":
+		port, err := strconv.Atoi(Port)
+		Expect(err).NotTo(HaveOccurred())
+		connStr = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&timeout=%ds&readTimeout=%ds&writeTimeout=%ds", Username, Password, Hostname, port, DBName, Timeout, Timeout, Timeout)
+	default:
+		connStr = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", Scheme, Username, Password, Hostname, Port, DBName)
+	}
 
 	db, err := sqlx.Open(Scheme, connStr)
 	Expect(err).NotTo(HaveOccurred())
