@@ -13,10 +13,9 @@ import (
 )
 
 var _ = Describe("Postgresql", func() {
-	var googleMfaCredentialsDB GoogleMfaCredentialsDB
+	var googleMfaCredentialsDB GoogleMfaCredentialsDBFetcher
 
 	BeforeEach(func() {
-
 		deleteResult, err := db.Exec(`delete from user_google_mfa_credentials`)
 		Expect(err).NotTo(HaveOccurred())
 		numOfRowsDeleted, err := deleteResult.RowsAffected()
@@ -28,7 +27,7 @@ var _ = Describe("Postgresql", func() {
 		insertGoogleMfaCredential("3", "activeKeyLabel")
 		insertGoogleMfaCredential("4", "activeKeyLabel")
 
-		googleMfaCredentialsDB = GoogleMfaCredentialsDB{
+		googleMfaCredentialsDB = GoogleMfaCredentialsDBFetcher{
 			DB:             DbAwareQuerier{DB: db, DBScheme: testutils.Scheme},
 			ActiveKeyLabel: "activeKeyLabel",
 		}
@@ -79,7 +78,7 @@ var _ = Describe("Postgresql", func() {
 			BeforeEach(func() {
 				queryer = &dbfakes.FakeQueryer{}
 				queryer.QueryxReturns(nil, errors.New("cannot query table"))
-				googleMfaCredentialsDB = GoogleMfaCredentialsDB{
+				googleMfaCredentialsDB = GoogleMfaCredentialsDBFetcher{
 					DB:             queryer,
 					ActiveKeyLabel: "activeKeyLabel",
 				}

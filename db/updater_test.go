@@ -16,7 +16,7 @@ var _ = Describe("Writer", func() {
 
 	var (
 		defaultMfaCredential entity.MfaCredential
-		credentialsDB        db2.GoogleMfaCredentialsDB
+		credentialsDB        db2.GoogleMfaCredentialsDBFetcher
 		credentialsDBUpdater db2.GoogleMfaCredentialsDBUpdater
 	)
 
@@ -30,7 +30,7 @@ var _ = Describe("Writer", func() {
 		newUserID := getRandomTimestamp()
 		defaultMfaCredential = insertGoogleMfaCredential(newUserID, "activeKeyLabel")
 
-		credentialsDB = db2.GoogleMfaCredentialsDB{
+		credentialsDB = db2.GoogleMfaCredentialsDBFetcher{
 			DB:             db2.DbAwareQuerier{DB: db, DBScheme: testutils.Scheme},
 			ActiveKeyLabel: "some-active-key-label",
 		}

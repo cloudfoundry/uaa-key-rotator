@@ -17,41 +17,54 @@ import (
 	"os/signal"
 	"syscall"
 	"strconv"
+	_ "code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager"
+	"sync"
+	"context"
+	"runtime"
+	"log"
 )
 
 func main() {
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, syscall.SIGTERM, os.Interrupt)
 
-	fmt.Println("rotator has started")
+	allowThreadDumpOnSigQUIT()
+
+	logger := lager.NewLogger(fmt.Sprintf("%s.%s", "rotator", "uaa-key-rotator"))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
+
+	logger.Info("rotator has started")
 
 	configPath := flag.String("config", "", "Path to uaa key rotator config file")
 	flag.Parse()
 	configFile, err := os.Open(*configPath)
 	if err != nil {
-		panic(err)
+		logger.Fatal("unable to open config", err)
 	}
 
 	rotatorConfig, err := config.New(configFile)
 	if err != nil {
-		panic(err)
+		logger.Fatal("unable to parse config", err)
 	}
 
 	var rotatorChan = make(chan struct{})
-	go rotate(rotatorConfig, rotatorChan)
+	parentCtx := context.Background()
+	rotatorCtx, cancelRotatorFunc := context.WithCancel(parentCtx)
+	go rotate(rotatorCtx, logger, rotatorConfig, rotatorChan)
 
 	select {
 	case s := <-sigChan:
 		if s == os.Interrupt {
-			fmt.Println("shutting down gracefully...")
-			os.Exit(1)
+			logger.Info("shutting down gracefully...")
+			cancelRotatorFunc()
 		}
 	case <-rotatorChan:
 		os.Exit(0)
 	}
 }
 
-func rotate(rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
+func rotate(parentCtx context.Context, logger lager.Logger, rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 	defer close(rotatorChan)
 
 	db, err := getDbConn(rotatorConfig.DatabaseScheme, getConnString(rotatorConfig))
@@ -60,10 +73,17 @@ func rotate(rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 	}
 	defer db.Close()
 
-	credentials, err := db2.ReadAll(db)
-	if err != nil {
-		panic(err)
+	credentialsDBFetcher := db2.GoogleMfaCredentialsDBFetcher{
+		DB:             db,
+		ActiveKeyLabel: rotatorConfig.ActiveKeyLabel,
 	}
+
+	var fetcherErrChan <-chan error
+	credentialsChan, fetcherErrChan := credentialsDBFetcher.RowsToRotate()
+	credentialsDBUpdater := db2.GoogleMfaCredentialsDBUpdater{
+		DB: db,
+	}
+
 	keyService := rotator.UaaKeyService{
 		ActiveKeyLabel: rotatorConfig.ActiveKeyLabel,
 		EncryptionKeys: rotatorConfig.EncryptionKeys,
@@ -75,16 +95,55 @@ func rotate(rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 		CipherAccessor: crypto.UAACipherAccessor{},
 		DbMapper:       rotator.DbMapper{},
 	}
-	for _, cred := range credentials {
-		rotatedCred, err := r.Rotate(cred)
-		if err != nil {
-			panic(err)
-		}
-		if err = db2.Write(db, rotatedCred); err != nil {
-			panic(err)
+
+	ctx, cancel := context.WithCancel(parentCtx)
+
+	worker := func(wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		for {
+			select {
+			case cred, ok := <-credentialsChan:
+				logger.Info("Getting mfa credential", lager.Data{"cred": cred})
+				if !ok {
+					logger.Debug("No more mfa credentials. Worker signing off...")
+					return
+				}
+
+				logger.Info("rotating mfa cred", lager.Data{"mfa_cred": cred})
+				rotatedCred, err := r.Rotate(cred)
+				if err != nil {
+					logger.Error("unable to rotate record... Skipping", err)
+					continue
+				}
+
+				err = credentialsDBUpdater.Write(rotatedCred)
+				if err != nil {
+					logger.Error("unable to update record... Skipping", err)
+					continue
+				}
+
+			case err := <-fetcherErrChan:
+				logger.Error("error during fetching a record...", err)
+				cancel()
+			case <-ctx.Done():
+				logger.Info("rotator worker has been cancelled")
+				return
+			}
 		}
 	}
-	fmt.Println("rotator has finished")
+
+	wg := sync.WaitGroup{}
+
+	numWorkers := 4
+	wg.Add(numWorkers)
+	for i := 0; i < numWorkers; i++ {
+		go worker(&wg)
+	}
+
+	logger.Info("workers are unleahsed")
+	wg.Wait()
+	logger.Info("rotator has finished")
 }
 
 func getConnString(rotatorConfig *config.RotatorConfig) string {
@@ -139,6 +198,19 @@ func getDbConn(scheme string, connectionString string) (db2.Queryer, error) {
 	}
 
 	return db2.DbAwareQuerier{DB: dbConn, DBScheme: scheme}, nil
+}
+
+func allowThreadDumpOnSigQUIT() {
+	go func() {
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGQUIT)
+		buf := make([]byte, 1<<20)
+		for {
+			<-sigs
+			stacklen := runtime.Stack(buf, true)
+			log.Printf("=== received SIGQUIT ===\n*** goroutine dump...\n%s\n*** end\n", buf[:stacklen])
+		}
+	}()
 }
 
 //TODO: tls certs

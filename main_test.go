@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
 )
 
 var _ = Describe("Main", func() {
@@ -63,7 +64,7 @@ var _ = Describe("Main", func() {
 		session.Signal(os.Interrupt)
 
 		Eventually(session).Should(gbytes.Say("shutting down gracefully..."))
-		Eventually(session).ShouldNot(gexec.Exit(0))
+		Eventually(session).Should(gexec.Exit(0))
 	})
 
 	It("should rotate encrypted data from an old key to the new 'active' key", func() {
@@ -71,11 +72,14 @@ var _ = Describe("Main", func() {
 		session.Signal(syscall.SIGTERM)
 		Eventually(session).ShouldNot(gbytes.Say("shutting down gracefully..."))
 
-		mfaCredentials, err := dbRotator.ReadAll(db)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(mfaCredentials).To(HaveLen(1))
+		credentialsDBFetcher := dbRotator.GoogleMfaCredentialsDBFetcher{DB: dbRotator.DbAwareQuerier{DB: db, DBScheme: testutils.Scheme}, ActiveKeyLabel: ""}
+		mfaCredentialChan, errChan := credentialsDBFetcher.RowsToRotate()
+		Eventually(errChan, 5*time.Second).ShouldNot(Receive())
 
-		decryptedRotatedSecretKey := decryptCipherValue(mfaCredentials[0].SecretKey, activeKey.Passphrase)
+		var rotatedMfaCredential entity.MfaCredential
+
+		Eventually(mfaCredentialChan, 5*time.Second).Should(Receive(&rotatedMfaCredential))
+		decryptedRotatedSecretKey := decryptCipherValue(rotatedMfaCredential.SecretKey, activeKey.Passphrase)
 		Expect(decryptedRotatedSecretKey).To(Equal("secret-key"))
 	})
 })

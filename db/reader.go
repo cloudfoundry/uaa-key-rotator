@@ -12,12 +12,12 @@ type Queryer interface {
 	Close() error
 }
 
-type GoogleMfaCredentialsDB struct {
+type GoogleMfaCredentialsDBFetcher struct {
 	DB             Queryer
 	ActiveKeyLabel string
 }
 
-func (gdb GoogleMfaCredentialsDB) RowsToRotate() (<-chan entity.MfaCredential, <-chan error) {
+func (gdb GoogleMfaCredentialsDBFetcher) RowsToRotate() (<-chan entity.MfaCredential, <-chan error) {
 	var mfaCredentialChan = make(chan entity.MfaCredential)
 	var errChan = make(chan error)
 
@@ -43,6 +43,8 @@ func (gdb GoogleMfaCredentialsDB) RowsToRotate() (<-chan entity.MfaCredential, <
 			}
 			mfaCredentialChan <- mfaCredential
 		}
+
+		close(mfaCredentialChan)
 	}()
 
 	return mfaCredentialChan, errChan

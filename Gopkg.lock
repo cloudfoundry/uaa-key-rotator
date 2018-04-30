@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "code.cloudfoundry.org/lager"
+  packages = ["."]
+  revision = "0bfa98e49e7a976af91e918d47978f07c00b081f"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "37b91d8876474f11b8e419f2fa65b15824ab9b9c"
@@ -140,6 +146,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d6ca712bcc1872ebe458f3946e2d18da4fce7d39a60940a2be68ecbabec9b9ae"
+  inputs-digest = "dad4e01a3bf9f643ed678b2a524c60bd4dafefb63bcd2a771ee801b83cd727ae"
   solver-name = "gps-cdcl"
   solver-version = 1
