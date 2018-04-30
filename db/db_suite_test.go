@@ -27,14 +27,14 @@ var _ = BeforeSuite(func() {
 	By("migrating UAA database", testutils.MigrateUaaDatabase)
 })
 
-func insertGoogleMfaCredential(userId string) entity.MfaCredential {
+func insertGoogleMfaCredential(userId string, activeKeyLabel string) entity.MfaCredential {
 	mfaCredential := entity.MfaCredential{
 		UserId:                  userId,
 		SecretKey:               "secret-key",
 		ScratchCodes:            "scratch_codes",
 		MfaProviderId:           "mfa_provider_id",
 		ZoneId:                  "zone_id",
-		EncryptionKeyLabel:      "activeKeyLabel",
+		EncryptionKeyLabel:      activeKeyLabel,
 		EncryptedValidationCode: "encrypted_validation_code",
 		ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
 	}

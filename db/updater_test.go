@@ -16,6 +16,8 @@ var _ = Describe("Writer", func() {
 
 	var (
 		defaultMfaCredential entity.MfaCredential
+		credentialsDB        db2.GoogleMfaCredentialsDB
+		credentialsDBUpdater db2.GoogleMfaCredentialsDBUpdater
 	)
 
 	BeforeEach(func() {
@@ -26,7 +28,15 @@ var _ = Describe("Writer", func() {
 		Expect(numOfRowsDeleted).To(BeNumerically(">=", int64(0)))
 
 		newUserID := getRandomTimestamp()
-		defaultMfaCredential = insertGoogleMfaCredential(newUserID)
+		defaultMfaCredential = insertGoogleMfaCredential(newUserID, "activeKeyLabel")
+
+		credentialsDB = db2.GoogleMfaCredentialsDB{
+			DB:             db2.DbAwareQuerier{DB: db, DBScheme: testutils.Scheme},
+			ActiveKeyLabel: "some-active-key-label",
+		}
+		credentialsDBUpdater = db2.GoogleMfaCredentialsDBUpdater{
+			DB: db2.DbAwareQuerier{DB: db, DBScheme: testutils.Scheme},
+		}
 	})
 
 	It("should update a single mfa record", func() {
@@ -42,14 +52,21 @@ var _ = Describe("Writer", func() {
 			EncryptionKeyLabel:      getRandomTimestamp(),
 			EncryptedValidationCode: getRandomTimestamp(),
 		}
-		mfaCredentialId3 := insertGoogleMfaCredential("userid_3")
+		mfaCredentialId3 := insertGoogleMfaCredential("userid_3", "activeKeyLabel")
 
-		err = db2.Write(db2.DbAwareQuerier{DB: db, DBScheme: testutils.Scheme}, updatedMfaCredential)
+		err = credentialsDBUpdater.Write(updatedMfaCredential)
 		Expect(err).NotTo(HaveOccurred())
 
-		mfaCredentials, err := db2.ReadAll(db)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(mfaCredentials).To(ConsistOf(updatedMfaCredential, mfaCredentialId3))
+		var errChan <-chan error
+		mfaCredentials, errChan := credentialsDB.RowsToRotate()
+		Consistently(errChan).ShouldNot(Receive())
+
+		var rotatedMfaCredential1 entity.MfaCredential
+		var rotatedMfaCredential2 entity.MfaCredential
+		Eventually(mfaCredentials).Should(Receive(&rotatedMfaCredential1))
+		Eventually(mfaCredentials).Should(Receive(&rotatedMfaCredential2))
+
+		Eventually([]entity.MfaCredential{rotatedMfaCredential1, rotatedMfaCredential2}).Should(ConsistOf(mfaCredentialId3, updatedMfaCredential))
 	})
 
 	Describe("when db error occurs", func() {
@@ -57,9 +74,12 @@ var _ = Describe("Writer", func() {
 		BeforeEach(func() {
 			mockDb = &dbfakes.FakeQueryer{}
 			mockDb.QueryxReturns(nil, errors.New("some db error"))
+			credentialsDBUpdater = db2.GoogleMfaCredentialsDBUpdater{
+				DB: mockDb,
+			}
 		})
 		It("should return meaningful error", func() {
-			err := db2.Write(mockDb, entity.MfaCredential{})
+			err := credentialsDBUpdater.Write(entity.MfaCredential{})
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError("Unable to update mfa db record: some db error"))
 		})

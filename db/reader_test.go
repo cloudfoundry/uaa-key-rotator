@@ -8,30 +8,42 @@ import (
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
+	"time"
 )
 
 var _ = Describe("Postgresql", func() {
+	var googleMfaCredentialsDB GoogleMfaCredentialsDB
 
 	BeforeEach(func() {
+
 		deleteResult, err := db.Exec(`delete from user_google_mfa_credentials`)
 		Expect(err).NotTo(HaveOccurred())
 		numOfRowsDeleted, err := deleteResult.RowsAffected()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(numOfRowsDeleted).To(BeNumerically(">=", int64(0)))
 
-		insertGoogleMfaCredential("1")
-		insertGoogleMfaCredential("2")
+		insertGoogleMfaCredential("1", "not-activeKeyLabel")
+		insertGoogleMfaCredential("2", "not-activeKeyLabel")
+		insertGoogleMfaCredential("3", "activeKeyLabel")
+		insertGoogleMfaCredential("4", "activeKeyLabel")
+
+		googleMfaCredentialsDB = GoogleMfaCredentialsDB{
+			DB:             DbAwareQuerier{DB: db, DBScheme: testutils.Scheme},
+			ActiveKeyLabel: "activeKeyLabel",
+		}
 	})
 
-	It("should return every record from the user_google_mfa_credentials table", func() {
-		var mfaCredentials []entity.MfaCredential
-		var err error
+	It("should return every record (except active key) from the user_google_mfa_credentials table", func() {
+		var mfaCredentials <-chan entity.MfaCredential
+		var errChan <-chan error
 
-		mfaCredentials, err = ReadAll(db)
-		Expect(err).NotTo(HaveOccurred())
+		mfaCredentials, errChan = googleMfaCredentialsDB.RowsToRotate()
+		Consistently(errChan).ShouldNot(Receive())
 
-		Expect(mfaCredentials).To(HaveLen(2))
-		Expect(mfaCredentials).To(ConsistOf(
+		var mfaCredential entity.MfaCredential
+		Eventually(mfaCredentials, 5*time.Second).Should(Receive(&mfaCredential))
+		Expect(mfaCredential).To(Equal(
 			entity.MfaCredential{
 				UserId:                  "1",
 				MfaProviderId:           entity.Char("mfa_provider_id"),
@@ -39,9 +51,13 @@ var _ = Describe("Postgresql", func() {
 				ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
 				ScratchCodes:            "scratch_codes",
 				SecretKey:               "secret-key",
-				EncryptionKeyLabel:      "activeKeyLabel",
+				EncryptionKeyLabel:      "not-activeKeyLabel",
 				EncryptedValidationCode: "encrypted_validation_code",
 			},
+		))
+
+		Eventually(mfaCredentials).Should(Receive(&mfaCredential))
+		Expect(mfaCredential).To(Equal(
 			entity.MfaCredential{
 				UserId:                  "2",
 				MfaProviderId:           entity.Char("mfa_provider_id"),
@@ -49,10 +65,11 @@ var _ = Describe("Postgresql", func() {
 				ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
 				SecretKey:               "secret-key",
 				ScratchCodes:            "scratch_codes",
-				EncryptionKeyLabel:      "activeKeyLabel",
+				EncryptionKeyLabel:      "not-activeKeyLabel",
 				EncryptedValidationCode: "encrypted_validation_code",
 			},
 		))
+
 	})
 
 	Describe("FakeDB", func() {
@@ -62,12 +79,17 @@ var _ = Describe("Postgresql", func() {
 			BeforeEach(func() {
 				queryer = &dbfakes.FakeQueryer{}
 				queryer.QueryxReturns(nil, errors.New("cannot query table"))
+				googleMfaCredentialsDB = GoogleMfaCredentialsDB{
+					DB:             queryer,
+					ActiveKeyLabel: "activeKeyLabel",
+				}
 			})
 
 			It("should return a meaningful error", func() {
-				_, err := ReadAll(queryer)
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError("ReadAll failed to query table: cannot query table"))
+				_, errChan := googleMfaCredentialsDB.RowsToRotate()
+				var err error
+				Eventually(errChan).Should(Receive(&err))
+				Expect(err).To(MatchError("RowsToRotate failed to query table: cannot query table"))
 			})
 		})
 	})

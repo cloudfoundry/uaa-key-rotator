@@ -29,8 +29,12 @@ func (q DbAwareQuerier) Queryx(query string, args ...interface{}) (*sqlx.Rows, e
 	return q.DB.Queryx(RebindForSQLDialect(query, q.DBScheme), args...)
 }
 
-func Write(db Queryer, credential entity.MfaCredential) error {
-	rs, err := db.Queryx(updateGoogleMfaCredentialQuery,
+type GoogleMfaCredentialsDBUpdater struct {
+	DB Queryer
+}
+
+func (gdb GoogleMfaCredentialsDBUpdater) Write(credential entity.MfaCredential) error {
+	rs, err := gdb.DB.Queryx(updateGoogleMfaCredentialQuery,
 		credential.SecretKey,
 		credential.ScratchCodes,
 		credential.EncryptionKeyLabel,
