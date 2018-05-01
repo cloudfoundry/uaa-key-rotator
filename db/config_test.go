@@ -1,10 +1,10 @@
 package db_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/cloudfoundry/uaa-key-rotator/config"
 	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Config", func() {
@@ -68,7 +68,6 @@ var _ = Describe("Config", func() {
 		BeforeEach(func() {
 			rotatorConfig.DatabaseScheme = "postgres"
 		})
-
 
 		It("should generate connection uri", func() {
 			connectionURI := db2.ConnectionURI(rotatorConfig)

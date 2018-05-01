@@ -4,12 +4,12 @@ import (
 	"errors"
 	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 	"github.com/cloudfoundry/uaa-key-rotator/db/dbfakes"
+	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"strconv"
 	"time"
-	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
 )
 
 var _ = Describe("Writer", func() {

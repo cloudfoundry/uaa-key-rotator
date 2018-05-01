@@ -1,9 +1,9 @@
 package db
 
 import (
+	"fmt"
 	"github.com/cloudfoundry/uaa-key-rotator/config"
 	"strconv"
-	"fmt"
 )
 
 func ConnectionURI(rotatorConfig *config.RotatorConfig) string {

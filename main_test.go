@@ -5,6 +5,7 @@ import (
 	"github.com/cloudfoundry/uaa-key-rotator/config"
 	dbRotator "github.com/cloudfoundry/uaa-key-rotator/db"
 	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
+	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -14,7 +15,6 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
-	"github.com/cloudfoundry/uaa-key-rotator/entity"
 )
 
 var _ = Describe("Main", func() {

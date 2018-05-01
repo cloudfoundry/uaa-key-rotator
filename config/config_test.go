@@ -72,13 +72,13 @@ var _ = Describe("Config", func() {
 				"encryptionKeys": []map[string]string{
 					{"label": "active-key", "passphrase": "secret2"},
 				},
-				"databaseHostname": "db-hostname",
-				"databasePort":     "db-port",
-				"databaseScheme":   "db-scheme",
-				"databaseName":     "db-name",
-				"databaseUsername": "db-username",
-				"databasePassword": "db-password",
-				"databaseTlsEnabled": true,
+				"databaseHostname":          "db-hostname",
+				"databasePort":              "db-port",
+				"databaseScheme":            "db-scheme",
+				"databaseName":              "db-name",
+				"databaseUsername":          "db-username",
+				"databasePassword":          "db-password",
+				"databaseTlsEnabled":        true,
 				"databaseSkipSSLValidation": true,
 			}
 		})

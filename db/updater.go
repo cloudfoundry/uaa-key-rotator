@@ -3,9 +3,9 @@ package db
 import (
 	"fmt"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"strings"
-	"github.com/jmoiron/sqlx"
 )
 
 var updateGoogleMfaCredentialQuery = `update

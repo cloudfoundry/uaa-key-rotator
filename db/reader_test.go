@@ -5,10 +5,10 @@ import (
 	"errors"
 	. "github.com/cloudfoundry/uaa-key-rotator/db"
 	"github.com/cloudfoundry/uaa-key-rotator/db/dbfakes"
+	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
 	"time"
 )
 

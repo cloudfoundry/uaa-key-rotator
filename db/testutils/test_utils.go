@@ -2,8 +2,8 @@ package testutils
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -12,9 +12,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 )
 
 var (

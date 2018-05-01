@@ -1,6 +1,9 @@
 package main
 
 import (
+	"code.cloudfoundry.org/lager"
+	_ "code.cloudfoundry.org/lager"
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
@@ -8,20 +11,17 @@ import (
 	"github.com/cloudfoundry/uaa-key-rotator/crypto"
 	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 	"github.com/cloudfoundry/uaa-key-rotator/rotator"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/pkg/errors"
+	"log"
 	"net"
 	"os"
 	"os/signal"
-	"syscall"
-	_ "code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager"
-	"sync"
-	"context"
 	"runtime"
-	"log"
+	"sync"
+	"syscall"
 )
 
 func main() {
