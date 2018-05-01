@@ -28,7 +28,9 @@ var _ = Describe("Config", func() {
 					"databaseName": "uaadb",
 					"databaseScheme": "postgresql",
 					"databaseUsername": "admin",
-					"databasePassword": "afdsafda"
+					"databasePassword": "afdsafda",
+					"databaseTlsEnabled": true,
+					"databaseSkipSSLValidation": true
 					}
 					`
 
@@ -55,6 +57,8 @@ var _ = Describe("Config", func() {
 		Expect(rotatorConfig.DatabaseName).To(Equal("uaadb"))
 		Expect(rotatorConfig.DatabaseUsername).To(Equal("admin"))
 		Expect(rotatorConfig.DatabasePassword).To(Equal("afdsafda"))
+		Expect(rotatorConfig.DatabaseTlsEnabled).To(BeTrue())
+		Expect(rotatorConfig.DatabaseSkipSSLValidation).To(BeTrue())
 	})
 
 	Context("when given an invalid json config file", func() {
@@ -72,6 +76,8 @@ var _ = Describe("Config", func() {
 				"databaseName":     "db-name",
 				"databaseUsername": "db-username",
 				"databasePassword": "db-password",
+				"databaseTlsEnabled": true,
+				"databaseSkipSSLValidation": true,
 			}
 		})
 
@@ -97,6 +103,8 @@ var _ = Describe("Config", func() {
 			table.Entry("invalid db scheme", "databaseScheme", "", "Invalid config.: DatabaseScheme: zero value"),
 			table.Entry("invalid db username", "databaseUsername", "", "Invalid config.: DatabaseUsername: zero value"),
 			table.Entry("invalid db ", "databaseName", "", "Invalid config.: DatabaseName: zero value"),
+			table.Entry("invalid db tls enabled", "databaseTlsEnabled", "", "Malformed JSON provided.: json: cannot unmarshal string into Go struct field RotatorConfig.databaseTlsEnabled of type bool"),
+			table.Entry("invalid db databaseSkipSSLValidation", "databaseSkipSSLValidation", "", "Malformed JSON provided.: json: cannot unmarshal string into Go struct field RotatorConfig.databaseSkipSSLValidation of type bool"),
 		)
 
 	})

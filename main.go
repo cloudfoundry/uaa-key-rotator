@@ -108,7 +108,6 @@ func rotate(parentCtx context.Context, logger lager.Logger, rotatorConfig *confi
 					logger.Debug("No more mfa credentials. Worker signing off...")
 					return
 				}
-				logger.Info("Getting mfa credential", lager.Data{"cred": cred})
 
 				logger.Info("rotating mfa cred", lager.Data{"mfa_cred": cred})
 				rotatedCred, err := r.Rotate(cred)

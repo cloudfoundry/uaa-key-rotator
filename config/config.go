@@ -14,14 +14,16 @@ type EncryptionKey struct {
 }
 
 type RotatorConfig struct {
-	ActiveKeyLabel   string          `json:"activeKeyLabel" validate:"nonzero"`
-	EncryptionKeys   []EncryptionKey `json:"encryptionKeys" validate:"nonzero"`
-	DatabaseHostname string          `json:"databaseHostname" validate:"nonzero"`
-	DatabasePort     string          `json:"databasePort" validate:"nonzero"`
-	DatabaseScheme   string          `json:"databaseScheme" validate:"nonzero"`
-	DatabaseName     string          `json:"databaseName" validate:"nonzero"`
-	DatabaseUsername string          `json:"databaseUsername" validate:"nonzero"`
-	DatabasePassword string          `json:"databasePassword"`
+	ActiveKeyLabel            string          `json:"activeKeyLabel" validate:"nonzero"`
+	EncryptionKeys            []EncryptionKey `json:"encryptionKeys" validate:"nonzero"`
+	DatabaseHostname          string          `json:"databaseHostname" validate:"nonzero"`
+	DatabasePort              string          `json:"databasePort" validate:"nonzero"`
+	DatabaseScheme            string          `json:"databaseScheme" validate:"nonzero"`
+	DatabaseName              string          `json:"databaseName" validate:"nonzero"`
+	DatabaseUsername          string          `json:"databaseUsername" validate:"nonzero"`
+	DatabasePassword          string          `json:"databasePassword"`
+	DatabaseTlsEnabled        bool            `json:"databaseTlsEnabled"`
+	DatabaseSkipSSLValidation bool            `json:"databaseSkipSSLValidation"`
 }
 
 func New(rotatorConfigReader io.Reader) (*RotatorConfig, error) {
