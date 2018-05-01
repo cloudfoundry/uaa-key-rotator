@@ -30,7 +30,8 @@ var _ = Describe("Config", func() {
 					"databaseUsername": "admin",
 					"databasePassword": "afdsafda",
 					"databaseTlsEnabled": true,
-					"databaseSkipSSLValidation": true
+					"databaseSkipSSLValidation": true,
+					"databaseTLSProtocols": "TLSv1.2,TLSv1.1"
 					}
 					`
 
@@ -59,6 +60,7 @@ var _ = Describe("Config", func() {
 		Expect(rotatorConfig.DatabasePassword).To(Equal("afdsafda"))
 		Expect(rotatorConfig.DatabaseTlsEnabled).To(BeTrue())
 		Expect(rotatorConfig.DatabaseSkipSSLValidation).To(BeTrue())
+		Expect(rotatorConfig.DatabaseTLSProtocols).To(Equal("TLSv1.2,TLSv1.1"))
 	})
 
 	Context("when given an invalid json config file", func() {

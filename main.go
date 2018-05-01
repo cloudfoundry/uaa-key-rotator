@@ -16,7 +16,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"strconv"
 	_ "code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager"
 	"sync"
@@ -67,7 +66,7 @@ func main() {
 func rotate(parentCtx context.Context, logger lager.Logger, rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 	defer close(rotatorChan)
 
-	db, err := getDbConn(rotatorConfig.DatabaseScheme, getConnString(rotatorConfig))
+	db, err := getDbConn(rotatorConfig.DatabaseScheme, db2.ConnectionURI(rotatorConfig))
 	if err != nil {
 		panic(err)
 	}
@@ -145,42 +144,6 @@ func rotate(parentCtx context.Context, logger lager.Logger, rotatorConfig *confi
 	logger.Info("rotator has finished")
 }
 
-func getConnString(rotatorConfig *config.RotatorConfig) string {
-	var connStr string
-	switch rotatorConfig.DatabaseScheme {
-	case "mysql":
-		{
-			timeout := 10
-
-			port, err := strconv.Atoi(rotatorConfig.DatabasePort)
-			if err != nil {
-				panic(err)
-			}
-			connStr = fmt.Sprintf(
-				"%s:%s@tcp(%s:%d)/%s?parseTime=true&timeout=%ds&readTimeout=%ds&writeTimeout=%ds",
-				rotatorConfig.DatabaseUsername,
-				rotatorConfig.DatabasePassword,
-				rotatorConfig.DatabaseHostname,
-				port,
-				rotatorConfig.DatabaseName,
-				timeout,
-				timeout,
-				timeout,
-			)
-		}
-	case "postgres":
-		connStr = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable",
-			rotatorConfig.DatabaseScheme,
-			rotatorConfig.DatabaseUsername,
-			rotatorConfig.DatabasePassword,
-			rotatorConfig.DatabaseHostname,
-			rotatorConfig.DatabasePort,
-			rotatorConfig.DatabaseName,
-		)
-	}
-	return connStr
-}
-
 func getDbConn(scheme string, connectionString string) (db2.Queryer, error) {
 	nativeDBConn, err := sql.Open(scheme, connectionString)
 	if err != nil {
@@ -211,12 +174,3 @@ func allowThreadDumpOnSigQUIT() {
 		}
 	}()
 }
-
-//TODO: tls certs
-/*
-db, err := sql.Open("mysql", "user@tcp(localhost:3306)/test?tls=custom")
-    db.Driver().(mysql.TLSConfig).SetTLSConfig("custom", &tls.Config{
-        RootCAs:      rootCAs,
-        Certificates: clientCerts,
-    })
-*/
