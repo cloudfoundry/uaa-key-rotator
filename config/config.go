@@ -9,8 +9,8 @@ import (
 )
 
 type EncryptionKey struct {
-	Label      string `json:"label" validate:"nonzero"`
-	Passphrase string `json:"passphrase" validate:"nonzero"`
+	Label      string      `json:"label" validate:"nonzero"`
+	Passphrase json.Number `json:"passphrase" validate:"nonzero"`
 }
 
 type RotatorConfig struct {

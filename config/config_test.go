@@ -24,7 +24,8 @@ var _ = Describe("Config", func() {
 		configFileContent = `{
 					"activeKeyLabel": "key1",
 					"encryptionKeys": [
-						{"label": "active-key", "passphrase": "secret"}
+						{"label": "active-key", "passphrase": "secret"},
+						{"label": "active-key1", "passphrase": 123}
 					],
 					"databaseHostname": "localhost",
 					"databasePort": "5432",
@@ -53,9 +54,10 @@ var _ = Describe("Config", func() {
 
 		Expect(err).ToNot(HaveOccurred())
 		Expect(rotatorConfig.ActiveKeyLabel).To(Equal("key1"))
-		Expect(rotatorConfig.EncryptionKeys).To(ConsistOf(config.EncryptionKey{
-			Label: "active-key", Passphrase: "secret",
-		}))
+		Expect(rotatorConfig.EncryptionKeys).To(ConsistOf(
+			config.EncryptionKey{Label: "active-key", Passphrase: "secret"},
+			config.EncryptionKey{Label: "active-key1", Passphrase: "123"},
+		))
 		Expect(rotatorConfig.DatabaseHostname).To(Equal("localhost"))
 		Expect(rotatorConfig.DatabasePort).To(Equal("5432"))
 		Expect(rotatorConfig.DatabaseScheme).To(Equal("postgres"))
