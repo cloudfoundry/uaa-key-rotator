@@ -40,7 +40,7 @@ var _ = BeforeSuite(func() {
 
 	By("migrating UAA database", testutils.MigrateUaaDatabase)
 
-	activeKey = config.EncryptionKey{Label: "active-key", Passphrase: "my-passphrase"}
+	activeKey = config.EncryptionKey{Label: "active-key", Passphrase: "123"}
 
 	By("clearing database of any records", func() {
 		_, err := db.Exec(`truncate user_google_mfa_credentials;`)
@@ -53,7 +53,7 @@ var _ = BeforeSuite(func() {
 func testFixtures() {
 	oldKey = config.EncryptionKey{
 		Label:      "old-key-label",
-		Passphrase: "secret",
+		Passphrase: "321",
 	}
 
 	secretKeyCipherValue := encryptPlainText("secret-key", string(oldKey.Passphrase))

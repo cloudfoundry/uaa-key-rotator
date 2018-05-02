@@ -26,7 +26,7 @@ var _ = Describe("Main", func() {
 	BeforeEach(func() {
 		activeKey = config.EncryptionKey{
 			Label:      "active-key",
-			Passphrase: "new-secret",
+			Passphrase: "123",
 		}
 
 		rotatorConfig = &config.RotatorConfig{
