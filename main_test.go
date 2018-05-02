@@ -79,7 +79,7 @@ var _ = Describe("Main", func() {
 		var rotatedMfaCredential entity.MfaCredential
 
 		Eventually(mfaCredentialChan, 5*time.Second).Should(Receive(&rotatedMfaCredential))
-		decryptedRotatedSecretKey := decryptCipherValue(rotatedMfaCredential.SecretKey, activeKey.Passphrase)
+		decryptedRotatedSecretKey := decryptCipherValue(rotatedMfaCredential.SecretKey, string(activeKey.Passphrase))
 		Expect(decryptedRotatedSecretKey).To(Equal("secret-key"))
 	})
 })

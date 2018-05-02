@@ -24,7 +24,7 @@ func (s UaaKeyService) Key(keyLabel string) (crypto.Decryptor, error) {
 	}
 
 	return crypto.UAADecryptor{
-		Passphrase: key.Passphrase,
+		Passphrase: string(key.Passphrase),
 	}, nil
 }
 
@@ -37,7 +37,7 @@ func (s UaaKeyService) ActiveKey() (string, crypto.Encryptor, error) {
 	}
 
 	return s.ActiveKeyLabel, crypto.UAAEncryptor{
-		Passphrase:     key.Passphrase,
+		Passphrase:     string(key.Passphrase),
 		SaltGenerator:  crypto.UaaSaltGenerator{},
 		NonceGenerator: crypto.UaaNonceGenerator{},
 	}, nil

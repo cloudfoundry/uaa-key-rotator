@@ -56,9 +56,9 @@ func testFixtures() {
 		Passphrase: "secret",
 	}
 
-	secretKeyCipherValue := encryptPlainText("secret-key", oldKey.Passphrase)
-	scratchCodesCipherValue := encryptPlainText("scratchCodes", oldKey.Passphrase)
-	encryptedValidationCodesCipherValue := encryptPlainText("encryptedValidationCodes", oldKey.Passphrase)
+	secretKeyCipherValue := encryptPlainText("secret-key", string(oldKey.Passphrase))
+	scratchCodesCipherValue := encryptPlainText("scratchCodes", string(oldKey.Passphrase))
+	encryptedValidationCodesCipherValue := encryptPlainText("encryptedValidationCodes", string(oldKey.Passphrase))
 
 	mfaCredential := entity.MfaCredential{
 		UserId:                  "user-id-1",
