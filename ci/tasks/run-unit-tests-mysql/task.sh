@@ -14,8 +14,7 @@ cp -R uaa-key-rotator/* go/src/github.com/cloudfoundry/uaa-key-rotator
 cd go/src/github.com/cloudfoundry/uaa-key-rotator
 
 go get github.com/onsi/ginkgo/ginkgo
-
-reformatted_packages=$(go fmt ...)
+reformatted_packages=$(go fmt github.com/cloudfoundry/uaa-key-rotator/...)
 if [[ $reformatted_packages = *[![:space:]]* ]]; then
   echo "FAILURE: go fmt reformatted the following packages:"
   echo $reformatted_packages
