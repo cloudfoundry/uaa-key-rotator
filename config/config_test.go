@@ -39,7 +39,6 @@ var _ = Describe("Config", func() {
 					`
 	})
 
-
 	JustBeforeEach(func() {
 		var err error
 		tempConfigFile, err = ioutil.TempFile(os.TempDir(), "config")
