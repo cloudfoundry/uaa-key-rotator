@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+export UAA_LOCATION=$PWD/uaa
 source uaa/scripts/start_db_helper.sh
 bootDB $DB_SCHEME
 

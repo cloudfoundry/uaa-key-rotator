@@ -17,4 +17,4 @@ params:
   DB_USERNAME: root
   DB_PASSWORD: changeme
   DB_HOSTNAME: localhost
-  DB_PORT: 5432
+  DB_PORT: 3306

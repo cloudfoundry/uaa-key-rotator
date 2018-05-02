@@ -53,6 +53,11 @@ func TestDBConnection() *sqlx.DB {
 	var found bool
 	Scheme, found = os.LookupEnv("DB_SCHEME")
 	Expect(found).To(BeTrue(), "DB_SCHEME env variable is required")
+
+	if Scheme == "postgresql" {
+		Scheme = "postgres"
+	}
+
 	Hostname, found = os.LookupEnv("DB_HOSTNAME")
 	Expect(found).To(BeTrue(), "DB_HOSTNAME env variable is required")
 	Port, found = os.LookupEnv("DB_PORT")
