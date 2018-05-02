@@ -18,7 +18,10 @@ var (
 
 var _ = Describe("Config", func() {
 	var tempConfigFile *os.File
-	configFileContent := `{ 
+	var configFileContent string
+
+	BeforeEach(func() {
+		configFileContent = `{
 					"activeKeyLabel": "key1",
 					"encryptionKeys": [
 						{"label": "active-key", "passphrase": "secret"}
@@ -34,6 +37,8 @@ var _ = Describe("Config", func() {
 					"databaseTLSProtocols": "TLSv1.2,TLSv1.1"
 					}
 					`
+	})
+
 
 	JustBeforeEach(func() {
 		var err error
