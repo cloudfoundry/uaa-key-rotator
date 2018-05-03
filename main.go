@@ -48,9 +48,10 @@ func main() {
 	}
 
 	var rotatorChan = make(chan struct{})
+	var rotatorChanErr = make(chan error)
 	parentCtx := context.Background()
 	rotatorCtx, cancelRotatorFunc := context.WithCancel(parentCtx)
-	go rotate(rotatorCtx, logger, rotatorConfig, rotatorChan)
+	go rotate(rotatorCtx, logger, rotatorConfig, rotatorChan, rotatorChanErr)
 
 	select {
 	case s := <-sigChan:
@@ -60,21 +61,26 @@ func main() {
 		}
 	case <-rotatorChan:
 		os.Exit(0)
+	case err := <-rotatorChanErr:
+		logger.Error("rotator experienced an error. Exiting", err)
+		os.Exit(1)
 	}
 }
 
-func rotate(parentCtx context.Context, logger lager.Logger, rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
+func rotate(parentCtx context.Context, logger lager.Logger, rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}, rotatorChanErr chan error) {
 	defer close(rotatorChan)
 
 	dbURI, err := db2.ConnectionURI(rotatorConfig)
 	if err != nil {
 		logger.Error("unable to get a DBconnection URI", err)
+		rotatorChanErr <- errors.New("unable to get a DBconnection URI")
 		return
 	}
 
 	db, err := getDbConn(rotatorConfig.DatabaseScheme, dbURI)
 	if err != nil {
 		logger.Error("unable to get a DB Connection", err)
+		rotatorChanErr <- errors.New("unable to get a DB Connection")
 		return
 	}
 	defer db.Close()
@@ -133,6 +139,7 @@ func rotate(parentCtx context.Context, logger lager.Logger, rotatorConfig *confi
 				cancel()
 			case <-ctx.Done():
 				logger.Info("rotator worker has been cancelled")
+				rotatorChanErr <- errors.New("rotator worker has been cancelled")
 				return
 			}
 		}
