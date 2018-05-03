@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func ConnectionURI(rotatorConfig *config.RotatorConfig) string {
+func ConnectionURI(rotatorConfig *config.RotatorConfig) (string, error) {
 	var connStr string
 	switch rotatorConfig.DatabaseScheme {
 	case "mysql":
@@ -15,7 +15,7 @@ func ConnectionURI(rotatorConfig *config.RotatorConfig) string {
 
 			port, err := strconv.Atoi(rotatorConfig.DatabasePort)
 			if err != nil {
-				panic(err)
+				return "", err
 			}
 			connStr = fmt.Sprintf(
 				"%s:%s@tcp(%s:%d)/%s?parseTime=true&timeout=%ds&readTimeout=%ds&writeTimeout=%ds",
@@ -30,10 +30,10 @@ func ConnectionURI(rotatorConfig *config.RotatorConfig) string {
 			)
 
 			if rotatorConfig.DatabaseTlsEnabled {
-				connStr += "&useSSL=true"
-				connStr += fmt.Sprintf("&trustServerCertificate=%t", rotatorConfig.DatabaseSkipSSLValidation)
-				if len(rotatorConfig.DatabaseTLSProtocols) != 0 {
-					connStr += "&enabledSslProtocolSuites=" + rotatorConfig.DatabaseTLSProtocols
+				if rotatorConfig.DatabaseSkipSSLValidation {
+					connStr += "&tls=skip-verify"
+				} else {
+					connStr += "&tls=true"
 				}
 			}
 		}
@@ -57,5 +57,5 @@ func ConnectionURI(rotatorConfig *config.RotatorConfig) string {
 			connStr += "&sslmode=disable"
 		}
 	}
-	return connStr
+	return connStr, nil
 }

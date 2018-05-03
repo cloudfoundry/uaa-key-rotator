@@ -66,9 +66,16 @@ func main() {
 func rotate(parentCtx context.Context, logger lager.Logger, rotatorConfig *config.RotatorConfig, rotatorChan chan struct{}) {
 	defer close(rotatorChan)
 
-	db, err := getDbConn(rotatorConfig.DatabaseScheme, db2.ConnectionURI(rotatorConfig))
+	dbURI, err := db2.ConnectionURI(rotatorConfig)
 	if err != nil {
-		panic(err)
+		logger.Error("unable to get a DBconnection URI", err)
+		return
+	}
+
+	db, err := getDbConn(rotatorConfig.DatabaseScheme, dbURI)
+	if err != nil {
+		logger.Error("unable to get a DB Connection", err)
+		return
 	}
 	defer db.Close()
 

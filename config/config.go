@@ -24,7 +24,6 @@ type RotatorConfig struct {
 	DatabasePassword          string          `json:"databasePassword"`
 	DatabaseTlsEnabled        bool            `json:"databaseTlsEnabled"`
 	DatabaseSkipSSLValidation bool            `json:"databaseSkipSSLValidation"`
-	DatabaseTLSProtocols      string          `json:"databaseTLSProtocols"`
 }
 
 func New(rotatorConfigReader io.Reader) (*RotatorConfig, error) {
