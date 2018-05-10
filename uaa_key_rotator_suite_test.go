@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/cloudfoundry/uaa-key-rotator/config"
+	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	"github.com/jmoiron/sqlx"
@@ -17,7 +18,6 @@ import (
 	"os"
 	"os/exec"
 	"time"
-	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 )
 
 func TestUaaKeyRotator(t *testing.T) {

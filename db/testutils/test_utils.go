@@ -2,8 +2,8 @@ package testutils
 
 import (
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
@@ -86,4 +86,3 @@ func TestDBConnection() *sqlx.DB {
 	Expect(db.Ping()).Should(BeNil())
 	return db
 }
-

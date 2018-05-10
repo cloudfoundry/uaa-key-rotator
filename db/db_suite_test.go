@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	"database/sql"
+	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 	"github.com/cloudfoundry/uaa-key-rotator/db/testutils"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 )
 
 func TestDb(t *testing.T) {

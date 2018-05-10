@@ -1,9 +1,9 @@
 package db_test
 
 import (
+	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 )
 
 var _ = Describe("MakeSqlQueriesCompatWithDbs", func() {

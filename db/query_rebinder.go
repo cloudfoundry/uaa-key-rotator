@@ -1,9 +1,9 @@
 package db
 
 import (
-	"strings"
-	"fmt"
 	"errors"
+	"fmt"
+	"strings"
 )
 
 func RebindForSQLDialect(query, dialect string) (string, error) {

@@ -3,7 +3,6 @@ package main
 import (
 	"code.cloudfoundry.org/lager"
 	_ "code.cloudfoundry.org/lager"
-	_ "github.com/denisenkom/go-mssqldb"
 	"context"
 	"database/sql"
 	"flag"
@@ -12,6 +11,7 @@ import (
 	"github.com/cloudfoundry/uaa-key-rotator/crypto"
 	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 	"github.com/cloudfoundry/uaa-key-rotator/rotator"
+	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
