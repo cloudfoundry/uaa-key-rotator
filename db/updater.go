@@ -1,11 +1,9 @@
 package db
 
 import (
-	"fmt"
 	"github.com/cloudfoundry/uaa-key-rotator/entity"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 var updateGoogleMfaCredentialQuery = `update
@@ -26,7 +24,11 @@ func (q DbAwareQuerier) Close() error {
 }
 
 func (q DbAwareQuerier) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
-	return q.DB.Queryx(RebindForSQLDialect(query, q.DBScheme), args...)
+	reboundQuery, err := RebindForSQLDialect(query, q.DBScheme)
+	if err != nil {
+		panic(err)
+	}
+	return q.DB.Queryx(reboundQuery, args...)
 }
 
 type GoogleMfaCredentialsDBUpdater struct {
@@ -46,19 +48,4 @@ func (gdb GoogleMfaCredentialsDBUpdater) Write(credential entity.MfaCredential) 
 	}
 	defer rs.Close()
 	return nil
-}
-
-func RebindForSQLDialect(query, dialect string) string {
-	if dialect == "mysql" {
-		return query
-	}
-	if dialect != "postgres" {
-		panic(fmt.Sprintf("Unrecognized DB dialect '%s'", dialect))
-	}
-
-	strParts := strings.Split(query, "?")
-	for i := 1; i < len(strParts); i++ {
-		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
-	}
-	return strings.Join(strParts, "")
 }

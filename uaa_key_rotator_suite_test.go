@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"time"
+	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 )
 
 func TestUaaKeyRotator(t *testing.T) {
@@ -43,8 +44,15 @@ var _ = BeforeSuite(func() {
 	activeKey = config.EncryptionKey{Label: "active-key", Passphrase: "123"}
 
 	By("clearing database of any records", func() {
-		_, err := db.Exec(`truncate user_google_mfa_credentials;`)
-		Expect(err).NotTo(HaveOccurred())
+
+		switch testutils.Scheme {
+		case "sqlserver":
+			_, err := db.Exec(`truncate table user_google_mfa_credentials;`)
+			Expect(err).NotTo(HaveOccurred())
+		default:
+			_, err := db.Exec(`truncate user_google_mfa_credentials;`)
+			Expect(err).NotTo(HaveOccurred())
+		}
 	})
 
 	By("adding test fixtures", testFixtures)
@@ -71,7 +79,7 @@ func testFixtures() {
 		ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
 	}
 
-	insertSQL := testutils.RebindForSQLDialect(`insert into user_google_mfa_credentials(
+	insertSQL, err := db2.RebindForSQLDialect(`insert into user_google_mfa_credentials(
 		user_id, 
 		secret_key, 
 		validation_code, 
@@ -82,6 +90,7 @@ func testFixtures() {
 		encrypted_validation_code) values(
 		?, ?, ?, ?, ?, ?, ?, ?)`,
 		testutils.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	insertResult, err := db.Exec(insertSQL,
 		mfaCredential.UserId,
@@ -137,8 +146,14 @@ var _ = AfterSuite(func() {
 	Expect(os.Remove(uaaRotatorBuildPath)).To(Succeed())
 	By("clearing database of any records", func() {
 		if db != nil {
-			_, err := db.Exec(`truncate user_google_mfa_credentials;`)
-			Expect(err).NotTo(HaveOccurred())
+			switch testutils.Scheme {
+			case "sqlserver":
+				_, err := db.Exec(`truncate table user_google_mfa_credentials;`)
+				Expect(err).NotTo(HaveOccurred())
+			default:
+				_, err := db.Exec(`truncate user_google_mfa_credentials;`)
+				Expect(err).NotTo(HaveOccurred())
+			}
 		}
 	})
 	db.Close()

@@ -3,6 +3,7 @@ package testutils
 import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/denisenkom/go-mssqldb"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
@@ -13,7 +14,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -75,6 +75,8 @@ func TestDBConnection() *sqlx.DB {
 		port, err := strconv.Atoi(Port)
 		Expect(err).NotTo(HaveOccurred())
 		connStr = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&timeout=%ds&readTimeout=%ds&writeTimeout=%ds", Username, Password, Hostname, port, DBName, Timeout, Timeout, Timeout)
+	case "sqlserver":
+		connStr = fmt.Sprintf("%s://%s:%s@%s:%s?database=%s&sslmode=disable", Scheme, Username, Password, Hostname, Port, DBName)
 	default:
 		connStr = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", Scheme, Username, Password, Hostname, Port, DBName)
 	}
@@ -85,17 +87,3 @@ func TestDBConnection() *sqlx.DB {
 	return db
 }
 
-func RebindForSQLDialect(query, dialect string) string {
-	if dialect == "mysql" {
-		return query
-	}
-	if dialect != "postgres" {
-		panic(fmt.Sprintf("Unrecognized DB dialect '%s'", dialect))
-	}
-
-	strParts := strings.Split(query, "?")
-	for i := 1; i < len(strParts); i++ {
-		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
-	}
-	return strings.Join(strParts, "")
-}

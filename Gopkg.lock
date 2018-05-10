@@ -8,6 +8,15 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/denisenkom/go-mssqldb"
+  packages = [
+    ".",
+    "internal/cp"
+  ]
+  revision = "e32faac87a2220f9342289f2c3b567d1424b8ec5"
+
+[[projects]]
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "37b91d8876474f11b8e419f2fa65b15824ab9b9c"
@@ -88,7 +97,10 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["pbkdf2"]
+  packages = [
+    "md4",
+    "pbkdf2"
+  ]
   revision = "d6449816ce06963d9d136eee5a56fca5b0616e7e"
 
 [[projects]]
@@ -146,6 +158,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "dad4e01a3bf9f643ed678b2a524c60bd4dafefb63bcd2a771ee801b83cd727ae"
+  inputs-digest = "82170b2c92ee79eed2d42170ead247362794ddc6fae319d86877089b5caef246"
   solver-name = "gps-cdcl"
   solver-version = 1

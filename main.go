@@ -3,6 +3,7 @@ package main
 import (
 	"code.cloudfoundry.org/lager"
 	_ "code.cloudfoundry.org/lager"
+	_ "github.com/denisenkom/go-mssqldb"
 	"context"
 	"database/sql"
 	"flag"

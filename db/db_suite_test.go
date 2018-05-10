@@ -10,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	db2 "github.com/cloudfoundry/uaa-key-rotator/db"
 )
 
 func TestDb(t *testing.T) {
@@ -39,7 +40,7 @@ func insertGoogleMfaCredential(userId string, activeKeyLabel string) entity.MfaC
 		ValidationCode:          sql.NullInt64{Int64: 1234, Valid: true},
 	}
 
-	insertSQL := testutils.RebindForSQLDialect(`insert into user_google_mfa_credentials(
+	insertSQL, err := db2.RebindForSQLDialect(`insert into user_google_mfa_credentials(
 		user_id, 
 		secret_key, 
 		validation_code, 
@@ -51,6 +52,7 @@ func insertGoogleMfaCredential(userId string, activeKeyLabel string) entity.MfaC
 		?, ?, ?, ?, ?, ?, ?, ?
 		)`,
 		testutils.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	insertResult, err := db.Exec(insertSQL, mfaCredential.UserId,
 		mfaCredential.SecretKey,
