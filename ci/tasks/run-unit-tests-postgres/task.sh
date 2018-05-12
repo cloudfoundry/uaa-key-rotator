@@ -24,4 +24,4 @@ if [[ $reformatted_packages = *[![:space:]]* ]]; then
 fi
 
 
-ginkgo -r --race -randomizeAllSpecs -randomizeSuites .
+ginkgo -v -r --race -randomizeAllSpecs -randomizeSuites .

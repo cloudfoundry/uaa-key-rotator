@@ -1,12 +1,19 @@
 #!/bin/bash
 
-export DB_SCHEME=sqlserver
-export DB_NAME=uaa
-export DB_USERNAME=root
-export DB_PASSWORD=changemeCHANGEME1234!
-export DB_HOSTNAME=127.0.0.1
-export DB_PORT=1433
-export UAA_LOCATION=~/workspace/uaa
+set -xeu
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-ginkgo -r .
+docker run -t -i \
+--workdir /tmp/build \
+-e DB_SCHEME=sqlserver \
+-e DB_NAME=uaa \
+-e DB_USERNAME=root \
+-e DB_PASSWORD=changemeCHANGEME1234! \
+-e DB_HOSTNAME=127.0.0.1 \
+-e DB_PORT=1433 \
+-e UAA_DIR=/tmp/build/uaa \
+-v ~/workspace/uaa:/tmp/build/uaa \
+-v $SCRIPT_DIR/..:/tmp/build/uaa-key-rotator \
+cfidentity/uaa-key-rotator-sqlserver \
+/tmp/build/uaa-key-rotator/ci/tasks/run-unit-tests-sqlserver/task.sh

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export UAA_LOCATION=$PWD/uaa
+export UAA_DIR=$PWD/uaa
 source uaa/scripts/start_db_helper.sh
 bootDB $DB_SCHEME
 
@@ -22,4 +23,4 @@ if [[ $reformatted_packages = *[![:space:]]* ]]; then
 fi
 
 
-ginkgo -r --race -randomizeAllSpecs -randomizeSuites .
+ginkgo -v -r --race -randomizeAllSpecs -randomizeSuites .
