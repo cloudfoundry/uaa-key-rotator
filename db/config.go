@@ -8,10 +8,10 @@ import (
 
 func ConnectionURI(rotatorConfig *config.RotatorConfig) (string, error) {
 	var connStr string
+	timeout := 240
 	switch rotatorConfig.DatabaseScheme {
 	case "mysql":
 		{
-			timeout := 120
 
 			port, err := strconv.Atoi(rotatorConfig.DatabasePort)
 			if err != nil {
@@ -38,13 +38,14 @@ func ConnectionURI(rotatorConfig *config.RotatorConfig) (string, error) {
 			}
 		}
 	case "postgres":
-		connStr = fmt.Sprintf("%s://%s:%s@%s:%s/%s?connect_timeout=120",
+		connStr = fmt.Sprintf("%s://%s:%s@%s:%s/%s?connect_timeout=%d",
 			rotatorConfig.DatabaseScheme,
 			rotatorConfig.DatabaseUsername,
 			rotatorConfig.DatabasePassword,
 			rotatorConfig.DatabaseHostname,
 			rotatorConfig.DatabasePort,
 			rotatorConfig.DatabaseName,
+			timeout,
 		)
 
 		if rotatorConfig.DatabaseTlsEnabled {
@@ -58,21 +59,24 @@ func ConnectionURI(rotatorConfig *config.RotatorConfig) (string, error) {
 		}
 
 	case "sqlserver":
-		connStr = fmt.Sprintf("%s://%s:%s@%s:%s?database=%s&connection+timeout=120",
+		connStr = fmt.Sprintf("%s://%s:%s@%s:%s?database=%s&connection+timeout=%d",
 			rotatorConfig.DatabaseScheme,
 			rotatorConfig.DatabaseUsername,
 			rotatorConfig.DatabasePassword,
 			rotatorConfig.DatabaseHostname,
 			rotatorConfig.DatabasePort,
 			rotatorConfig.DatabaseName,
+			timeout,
 		)
 
 		if rotatorConfig.DatabaseTlsEnabled {
 			if rotatorConfig.DatabaseSkipSSLValidation {
-				connStr += "&TrustServerCertificate=true"
+				connStr += "&TrustServerCertificate=true&encrypt=true"
 			} else {
-				connStr += "&TrustServerCertificate=false"
+				connStr += "&TrustServerCertificate=false&encrypt=true"
 			}
+		} else {
+			connStr += "&encrypt=false&TrustServerCertificate=true"
 		}
 	}
 	return connStr, nil

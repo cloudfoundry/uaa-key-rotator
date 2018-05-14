@@ -30,7 +30,7 @@ var _ = Describe("Config", func() {
 			connectionURI, err := db2.ConnectionURI(rotatorConfig)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(connectionURI).To(Equal("username:password@tcp(localhost:9876)/uaa?parseTime=true&timeout=120s&readTimeout=120s&writeTimeout=120s"))
+			Expect(connectionURI).To(Equal("username:password@tcp(localhost:9876)/uaa?parseTime=true&timeout=240s&readTimeout=240s&writeTimeout=240s"))
 		})
 
 		Context("when tls is enabled", func() {
@@ -42,7 +42,7 @@ var _ = Describe("Config", func() {
 				connectionURI, err := db2.ConnectionURI(rotatorConfig)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(connectionURI).To(Equal("username:password@tcp(localhost:9876)/uaa?parseTime=true&timeout=120s&readTimeout=120s&writeTimeout=120s&tls=true"))
+				Expect(connectionURI).To(Equal("username:password@tcp(localhost:9876)/uaa?parseTime=true&timeout=240s&readTimeout=240s&writeTimeout=240s&tls=true"))
 			})
 
 			Context("when skip ssl validation is enabled", func() {
@@ -54,7 +54,7 @@ var _ = Describe("Config", func() {
 					connectionURI, err := db2.ConnectionURI(rotatorConfig)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(connectionURI).To(Equal("username:password@tcp(localhost:9876)/uaa?parseTime=true&timeout=120s&readTimeout=120s&writeTimeout=120s&tls=skip-verify"))
+					Expect(connectionURI).To(Equal("username:password@tcp(localhost:9876)/uaa?parseTime=true&timeout=240s&readTimeout=240s&writeTimeout=240s&tls=skip-verify"))
 				})
 			})
 		})
@@ -78,7 +78,7 @@ var _ = Describe("Config", func() {
 		It("should generate connection uri", func() {
 			connectionURI, err := db2.ConnectionURI(rotatorConfig)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(connectionURI).To(Equal("postgres://username:password@localhost:9876/uaa?connect_timeout=120&sslmode=disable"))
+			Expect(connectionURI).To(Equal("postgres://username:password@localhost:9876/uaa?connect_timeout=240&sslmode=disable"))
 		})
 
 		Context("when tls is enabled", func() {
@@ -89,7 +89,7 @@ var _ = Describe("Config", func() {
 			It("should generate connection uri", func() {
 				connectionURI, err := db2.ConnectionURI(rotatorConfig)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(connectionURI).To(Equal("postgres://username:password@localhost:9876/uaa?connect_timeout=120&sslmode=verify-ca"))
+				Expect(connectionURI).To(Equal("postgres://username:password@localhost:9876/uaa?connect_timeout=240&sslmode=verify-ca"))
 			})
 
 			Context("when skip ssl validation is enabled", func() {
@@ -101,7 +101,7 @@ var _ = Describe("Config", func() {
 					connectionURI, err := db2.ConnectionURI(rotatorConfig)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(connectionURI).To(Equal("postgres://username:password@localhost:9876/uaa?connect_timeout=120&sslmode=require"))
+					Expect(connectionURI).To(Equal("postgres://username:password@localhost:9876/uaa?connect_timeout=240&sslmode=require"))
 				})
 			})
 		})
@@ -115,7 +115,7 @@ var _ = Describe("Config", func() {
 		It("should generate connection uri", func() {
 			connectionURI, err := db2.ConnectionURI(rotatorConfig)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=120"))
+			Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&encrypt=false&TrustServerCertificate=true"))
 		})
 
 		Context("when tls is enabled", func() {
@@ -126,7 +126,7 @@ var _ = Describe("Config", func() {
 			It("should generate connection uri", func() {
 				connectionURI, err := db2.ConnectionURI(rotatorConfig)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=120&TrustServerCertificate=false"))
+				Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&encrypt=true&TrustServerCertificate=false"))
 			})
 
 			Context("when skip ssl validation is enabled", func() {
@@ -138,7 +138,7 @@ var _ = Describe("Config", func() {
 					connectionURI, err := db2.ConnectionURI(rotatorConfig)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=120&TrustServerCertificate=true"))
+					Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&encrypt=true&TrustServerCertificate=true"))
 				})
 			})
 		})
