@@ -126,7 +126,7 @@ var _ = Describe("Config", func() {
 			It("should generate connection uri", func() {
 				connectionURI, err := db2.ConnectionURI(rotatorConfig)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&encrypt=true&TrustServerCertificate=false"))
+				Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&TrustServerCertificate=false&encrypt=true"))
 			})
 
 			Context("when skip ssl validation is enabled", func() {
@@ -138,7 +138,7 @@ var _ = Describe("Config", func() {
 					connectionURI, err := db2.ConnectionURI(rotatorConfig)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&encrypt=true&TrustServerCertificate=true"))
+					Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&TrustServerCertificate=true&encrypt=true"))
 				})
 			})
 		})
