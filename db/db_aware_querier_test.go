@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("DbAwareQuerier", func() {
+var _ = Describe("DbAwareQuerier", func() {
 	var dbAwareQuerier db2.DbAwareQuerier
 
 	BeforeEach(func() {
