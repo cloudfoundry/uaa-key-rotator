@@ -23,7 +23,7 @@ var _ = FDescribe("DbAwareQuerier", func() {
 		It("should return an error", func() {
 			_, err := dbAwareQuerier.Queryx("")
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError("Unable to query: Unrecognized DB dialect"))
+			Expect(err).To(MatchError("Unable to query: Unrecognized DB dialect 'unknown'"))
 		})
 	})
 })
