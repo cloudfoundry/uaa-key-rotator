@@ -63,7 +63,7 @@ var _ = Describe("Main", func() {
 
 		session.Signal(os.Interrupt)
 
-		Eventually(session).Should(gbytes.Say("shutting down gracefully..."))
+		Eventually(session, 5*time.Second).Should(gbytes.Say("shutting down gracefully..."))
 		Eventually(session).Should(gexec.Exit(0))
 	})
 
