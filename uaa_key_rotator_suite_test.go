@@ -44,15 +44,8 @@ var _ = BeforeSuite(func() {
 	activeKey = config.EncryptionKey{Label: "active-key", Passphrase: "123"}
 
 	By("clearing database of any records", func() {
-
-		switch testutils.Scheme {
-		case "sqlserver":
-			_, err := db.Exec(`truncate table user_google_mfa_credentials;`)
-			Expect(err).NotTo(HaveOccurred())
-		default:
-			_, err := db.Exec(`truncate user_google_mfa_credentials;`)
-			Expect(err).NotTo(HaveOccurred())
-		}
+		_, err := db.Exec(`truncate user_google_mfa_credentials;`)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	By("adding test fixtures", testFixtures)
@@ -146,14 +139,8 @@ var _ = AfterSuite(func() {
 	Expect(os.Remove(uaaRotatorBuildPath)).To(Succeed())
 	By("clearing database of any records", func() {
 		if db != nil {
-			switch testutils.Scheme {
-			case "sqlserver":
-				_, err := db.Exec(`truncate table user_google_mfa_credentials;`)
-				Expect(err).NotTo(HaveOccurred())
-			default:
-				_, err := db.Exec(`truncate user_google_mfa_credentials;`)
-				Expect(err).NotTo(HaveOccurred())
-			}
+			_, err := db.Exec(`truncate user_google_mfa_credentials;`)
+			Expect(err).NotTo(HaveOccurred())
 		}
 	})
 	db.Close()

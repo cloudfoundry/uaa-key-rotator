@@ -29,14 +29,6 @@ var _ = Describe("MakeSqlQueriesCompatWithDbs", func() {
 		})
 	})
 
-	Describe("sql server", func() {
-		It("should modify sql server queries", func() {
-			reboundQuery, err := db2.RebindForSQLDialect(query, "sqlserver")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(reboundQuery).To(Equal("select 1 from table where col1 = @p1"))
-		})
-	})
-
 	It("should fail if invalid db scheme is provided", func() {
 		_, err := db2.RebindForSQLDialect(query, "some-unknown-database")
 		Expect(err).To(HaveOccurred())

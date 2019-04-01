@@ -2,7 +2,6 @@ package testutils
 
 import (
 	"fmt"
-	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -75,8 +74,6 @@ func TestDBConnection() *sqlx.DB {
 		port, err := strconv.Atoi(Port)
 		Expect(err).NotTo(HaveOccurred())
 		connStr = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&timeout=%ds&readTimeout=%ds&writeTimeout=%ds", Username, Password, Hostname, port, DBName, Timeout, Timeout, Timeout)
-	case "sqlserver":
-		connStr = fmt.Sprintf("%s://%s:%s@%s:%s?database=%s&sslmode=disable", Scheme, Username, Password, Hostname, Port, DBName)
 	default:
 		connStr = fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", Scheme, Username, Password, Hostname, Port, DBName)
 	}

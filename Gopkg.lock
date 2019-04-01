@@ -8,15 +8,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/denisenkom/go-mssqldb"
-  packages = [
-    ".",
-    "internal/cp"
-  ]
-  revision = "e32faac87a2220f9342289f2c3b567d1424b8ec5"
-
-[[projects]]
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   revision = "37b91d8876474f11b8e419f2fa65b15824ab9b9c"

@@ -106,41 +106,4 @@ var _ = Describe("Config", func() {
 			})
 		})
 	})
-
-	Describe("SQLSERVER", func() {
-		BeforeEach(func() {
-			rotatorConfig.DatabaseScheme = "sqlserver"
-		})
-
-		It("should generate connection uri", func() {
-			connectionURI, err := db2.ConnectionURI(rotatorConfig)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&encrypt=false&TrustServerCertificate=true"))
-		})
-
-		Context("when tls is enabled", func() {
-			BeforeEach(func() {
-				rotatorConfig.DatabaseTlsEnabled = true
-			})
-
-			It("should generate connection uri", func() {
-				connectionURI, err := db2.ConnectionURI(rotatorConfig)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&TrustServerCertificate=false&encrypt=true"))
-			})
-
-			Context("when skip ssl validation is enabled", func() {
-				BeforeEach(func() {
-					rotatorConfig.DatabaseSkipSSLValidation = true
-				})
-
-				It("should generate connection uri", func() {
-					connectionURI, err := db2.ConnectionURI(rotatorConfig)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(connectionURI).To(Equal("sqlserver://username:password@localhost:9876?database=uaa&connection+timeout=240&TrustServerCertificate=true&encrypt=true"))
-				})
-			})
-		})
-	})
 })
